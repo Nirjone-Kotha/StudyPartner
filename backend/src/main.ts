@@ -31,8 +31,8 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`🚀 FunStore API running at http://localhost:${port}/api`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 FunStore API running at http://0.0.0.0:${port}/api`);
   console.log(`📚 Swagger docs at http://localhost:${port}/api/docs`);
 }
 bootstrap();
