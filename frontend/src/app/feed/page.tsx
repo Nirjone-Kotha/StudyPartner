@@ -26,6 +26,13 @@ export default function FeedPage() {
   useEffect(() => { hydrate(); }, [hydrate]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoad(false);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (isHydrated && !user) {
       router.replace('/');
     }
@@ -75,16 +82,6 @@ export default function FeedPage() {
   function handleUpdate(updated: Post) { setPosts(prev => prev.map(p => p.id === updated.id ? updated : p)); }
   function loadMore() { if (!loading && hasMore) loadFeed(page + 1); }
 
-  if (initialLoad) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--color-ink-soft)', fontSize: 16 }}>Loading feed…</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       <Toaster position="top-center" />
@@ -116,7 +113,13 @@ export default function FeedPage() {
             />
           )}
 
-          {posts.length === 0 && !loading && (
+          {initialLoad && (
+            <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+              <p style={{ color: 'var(--color-ink-soft)', fontSize: 15 }}>Loading posts…</p>
+            </div>
+          )}
+
+          {!initialLoad && posts.length === 0 && (
             <div className="card" style={{ padding: 40, textAlign: 'center' }}>
               <p style={{ color: 'var(--color-ink-soft)', fontSize: 16 }}>No posts yet. Be the first to share!</p>
             </div>
