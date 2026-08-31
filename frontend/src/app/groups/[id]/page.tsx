@@ -422,11 +422,11 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
       <Toaster position="top-center" />
       <Topbar />
 
-      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         <div className="left-sidebar"><LeftNav /></div>
 
-        <main style={{ flex: 1, minWidth: 0 }}>
-          <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 20 }}>
+        <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
+          <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
             <div style={{
               height: 180,
               background: group.coverImage

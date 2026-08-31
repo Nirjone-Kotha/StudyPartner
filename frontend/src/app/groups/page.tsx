@@ -233,26 +233,26 @@ export default function GroupsPage() {
       <Toaster position="top-center" />
       <Topbar />
 
-      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         <div className="left-sidebar"><LeftNav /></div>
 
-        <main style={{ flex: 1, minWidth: 0 }}>
+        <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
           {/* Header Banner */}
           <div className="card" style={{
-            padding: '24px 28px', marginBottom: 20,
-            background: 'linear-gradient(135deg, #1C1830 0%, #3B2D60 50%, #6C4CFA 100%)',
-            color: 'white', borderRadius: 'var(--radius-lg)',
+            padding: '20px 18px', marginBottom: 16,
+            background: 'linear-gradient(135deg, #0866FF 0%, #0052CC 100%)',
+            color: 'white', borderRadius: 'var(--radius-md)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            flexWrap: 'wrap', gap: 16,
+            flexWrap: 'wrap', gap: 14,
           }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, marginBottom: 10 }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.2)', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
                 Study Circles & Groups
               </div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'white', marginBottom: 6 }}>
-                Study Groups & Learning Communities
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 6, lineHeight: 1.25 }}>
+                Study Groups & Communities
               </h1>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', maxWidth: 500, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', maxWidth: 500, lineHeight: 1.45 }}>
                 Collaborate with peers, practice MCQs, and share knowledge by joining a group or creating your own.
               </p>
             </div>
@@ -262,29 +262,28 @@ export default function GroupsPage() {
               style={{
                 background: 'white', color: 'var(--color-brand)',
                 border: 'none', borderRadius: 'var(--radius-pill)',
-                padding: '12px 24px', fontWeight: 800, fontSize: 14,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 20px', fontWeight: 800, fontSize: 13.5,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                 boxShadow: '0 4px 14px rgba(0,0,0,0.15)', transition: 'all 0.15s',
+                whiteSpace: 'nowrap',
               }}
-              onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.03)')}
-              onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             >
-              Create New Group
+              + Create Group
             </button>
           </div>
 
           {/* Controls: Search, Tabs, Categories */}
-          <div className="card" style={{ padding: 16, marginBottom: 20 }}>
+          <div className="card" style={{ padding: 16, marginBottom: 16 }}>
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid var(--color-border)', paddingBottom: 12, marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--color-border)', paddingBottom: 12, marginBottom: 12 }}>
               <button
                 onClick={() => setActiveTab('discover')}
                 style={{
-                  padding: '8px 18px', border: 'none', borderRadius: 'var(--radius-pill)',
-                  cursor: 'pointer', fontSize: 14, fontWeight: 700,
+                  flex: 1, padding: '9px 14px', border: 'none', borderRadius: 'var(--radius-pill)',
+                  cursor: 'pointer', fontSize: 13, fontWeight: 700,
                   background: activeTab === 'discover' ? 'var(--color-brand)' : 'transparent',
                   color: activeTab === 'discover' ? 'white' : 'var(--color-ink-soft)',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.15s', textAlign: 'center',
                 }}
               >
                 Discover Groups ({groups.length})
@@ -292,11 +291,11 @@ export default function GroupsPage() {
               <button
                 onClick={() => setActiveTab('my')}
                 style={{
-                  padding: '8px 18px', border: 'none', borderRadius: 'var(--radius-pill)',
-                  cursor: 'pointer', fontSize: 14, fontWeight: 700,
+                  flex: 1, padding: '9px 14px', border: 'none', borderRadius: 'var(--radius-pill)',
+                  cursor: 'pointer', fontSize: 13, fontWeight: 700,
                   background: activeTab === 'my' ? 'var(--color-brand)' : 'transparent',
                   color: activeTab === 'my' ? 'white' : 'var(--color-ink-soft)',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.15s', textAlign: 'center',
                 }}
               >
                 My Groups ({myGroups.length})
@@ -304,17 +303,17 @@ export default function GroupsPage() {
             </div>
 
             {/* Search + Categories */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input
                 className="input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search groups (e.g. BCS, Medical, Engineering)…"
-                style={{ borderRadius: 'var(--radius-pill)', padding: '10px 18px' }}
+                style={{ borderRadius: 'var(--radius-pill)', padding: '10px 16px', fontSize: 13.5 }}
               />
 
               {/* Category pills */}
-              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
@@ -326,7 +325,7 @@ export default function GroupsPage() {
                       color: selectedCategory === cat ? 'var(--color-brand)' : 'var(--color-ink-soft)',
                       borderWidth: 1, borderStyle: 'solid',
                       borderColor: selectedCategory === cat ? 'var(--color-brand)' : 'transparent',
-                      transition: 'all 0.15s',
+                      transition: 'all 0.15s', flexShrink: 0,
                     }}
                   >
                     {cat}
