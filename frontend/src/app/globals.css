@@ -210,14 +210,14 @@ body {
     display: flex !important;
   }
 
-  /* Bottom nav padding so content doesn't hide behind it */
+  /* Content padding on mobile */
   .mobile-page-padding {
-    padding-bottom: 72px !important;
+    padding-bottom: 24px !important;
   }
 }
 
 @media (min-width: 769px) {
-  .mobile-bottom-nav {
+  .mobile-bottom-nav, .mobile-top-nav {
     display: none !important;
   }
   .show-on-mobile {
@@ -229,20 +229,12 @@ body {
 @media (display-mode: standalone) {
   body {
     padding-top: env(safe-area-inset-top, 0);
-    /* Allow full page to be scrollable inside PWA */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Every main page content area gets bottom padding so content
-     isn't hidden behind the fixed bottom nav */
   main, [data-page], .page-main {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 68px) !important;
-  }
-
-  .mobile-bottom-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
-    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px) !important;
   }
 }
 

@@ -27,7 +27,7 @@ export function Composer({ onPost }: ComposerProps) {
   // Post state
   const [text, setText] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null); // base64 local preview
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [explanation, setExplanation] = useState('');
   const [featured, setFeatured] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -46,7 +46,7 @@ export function Composer({ onPost }: ComposerProps) {
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       setMediaPreview(dataUrl);
-      setMediaUrl(dataUrl); // store as base64 for submission
+      setMediaUrl(dataUrl);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -118,41 +118,86 @@ export function Composer({ onPost }: ComposerProps) {
 
   return (
     <>
-      {/* Collapsed trigger card */}
-      <div className="card" style={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {user?.avatar ? (
-            <Image src={user.avatar} alt={user.name} width={42} height={42} className="avatar" unoptimized style={{ flexShrink: 0 }} />
-          ) : (
-            <div className="avatar" style={{ width: 42, height: 42, background: 'var(--color-brand-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--color-brand)', flexShrink: 0, fontSize: 18 }}>
-              {user?.name?.[0]}
-            </div>
-          )}
+      {/* ─── Facebook App Style Trigger Card (Image 1 Circle 2) ─── */}
+      <div className="card" style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'white' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {/* Avatar with subtle online status */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            {user?.avatar ? (
+              <Image src={user.avatar} alt={user.name} width={40} height={40} className="avatar" unoptimized />
+            ) : (
+              <div className="avatar" style={{ width: 40, height: 40, background: 'var(--color-brand-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--color-brand)', fontSize: 16 }}>
+                {user?.name?.[0]}
+              </div>
+            )}
+            <div style={{
+              position: 'absolute', bottom: 0, right: 0,
+              width: 10, height: 10, borderRadius: '50%',
+              background: '#22c55e', border: '2px solid white',
+            }} />
+          </div>
+
+          {/* Pill Input */}
           <button
             onClick={() => { setMode('post'); setShowModal(true); }}
             style={{
-              flex: 1, textAlign: 'left', padding: '11px 16px',
-              background: 'var(--color-bg)', border: '1.5px solid var(--color-border)',
+              flex: 1, textAlign: 'left', padding: '10px 16px',
+              background: 'var(--color-bg)', border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-              fontSize: 15, color: 'var(--color-ink-faint)',
-              transition: 'border-color 0.15s',
+              fontSize: 14, color: 'var(--color-ink-soft)',
+              transition: 'all 0.15s',
             }}
             onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--color-brand)')}
             onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--color-border)')}
           >
-            What's on your mind, {user?.name?.split(' ')[0]}?
+            What's on your mind?
           </button>
+
+          {/* Photo Button (Facebook Style) */}
+          <button
+            onClick={() => {
+              setMode('post');
+              setShowModal(true);
+              setTimeout(() => imageInputRef.current?.click(), 100);
+            }}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '4px 6px', borderRadius: 8, gap: 2, flexShrink: 0,
+              transition: 'background 0.15s',
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.background = 'var(--color-bg)')}
+            onMouseOut={(e) => (e.currentTarget.style.background = 'none')}
+            title="Attach Photo"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#22c55e">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/>
+            </svg>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-soft)' }}>Photo</span>
+          </button>
+
+          {/* Poll Button (Facebook Style) */}
           <button
             onClick={() => { setMode('poll'); setShowModal(true); }}
-            className="btn-ghost"
-            style={{ fontSize: 13, padding: '9px 16px', flexShrink: 0 }}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '4px 6px', borderRadius: 8, gap: 2, flexShrink: 0,
+              transition: 'background 0.15s',
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.background = 'var(--color-bg)')}
+            onMouseOut={(e) => (e.currentTarget.style.background = 'none')}
+            title="Create Poll"
           >
-            Create Poll
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--color-brand)">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-5h2v5zm4 0h-2v-9h2v9zm4 0h-2v-4h2v4z"/>
+            </svg>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-soft)' }}>Poll</span>
           </button>
         </div>
       </div>
 
-      {/* Modal overlay */}
+      {/* ─── Modal Overlay ─── */}
       {showModal && (
         <div
           style={{
@@ -163,7 +208,7 @@ export function Composer({ onPost }: ComposerProps) {
           }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
         >
-          <div className="card" style={{ width: '100%', maxWidth: 520, padding: 0, overflow: 'hidden' }}>
+          <div className="card" style={{ width: '100%', maxWidth: 520, padding: 0, overflow: 'hidden', background: 'white' }}>
             {/* Modal header */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -202,7 +247,10 @@ export function Composer({ onPost }: ComposerProps) {
                     {user?.name?.[0]}
                   </div>
                 )}
-                <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-ink)' }}>{user?.name}</span>
+                <div>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-ink)', display: 'block' }}>{user?.name}</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-ink-soft)', background: 'var(--color-bg)', padding: '2px 8px', borderRadius: 99 }}>Public 🌐</span>
+                </div>
               </div>
 
               {mode === 'post' ? (
