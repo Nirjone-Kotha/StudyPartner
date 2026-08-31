@@ -284,6 +284,18 @@ body {
     padding-top: 16px;
     padding-bottom: 32px;
   }
+  .feed-main > * {
+    flex-shrink: 0;
+    width: 100%;
+  }
+  .left-sidebar > * {
+    flex-shrink: 0;
+    width: 100%;
+  }
+  .right-sidebar > * {
+    flex-shrink: 0;
+    width: 100%;
+  }
   .right-sidebar {
     width: 280px;
     flex-shrink: 0;

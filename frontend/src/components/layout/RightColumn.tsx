@@ -32,9 +32,14 @@ export function RightColumn() {
         <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
           Sponsored
         </h3>
-        <div style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: 10 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={PIC(1060)} alt="Sponsored" style={{ width: '100%', display: 'block', objectFit: 'cover' }} loading="lazy" />
+        <div style={{
+          borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: 10,
+          height: 110, background: 'linear-gradient(135deg, #fce7f3 0%, #e0e7ff 50%, #dbeafe 100%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          border: '1px solid var(--color-border)',
+        }}>
+          <span style={{ fontSize: 32 }}>🏺✨</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-brand)', marginTop: 4 }}>Artisanal Creations</span>
         </div>
         <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--color-ink)', marginBottom: 2 }}>
           Handmade pottery studio
