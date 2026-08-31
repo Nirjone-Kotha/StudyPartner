@@ -1,5 +1,6 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
@@ -23,6 +24,9 @@ export function Composer({ onPost }: ComposerProps) {
   const [mode, setMode] = useState<Mode>('post');
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Post state
   const [text, setText] = useState('');
@@ -197,47 +201,72 @@ export function Composer({ onPost }: ComposerProps) {
         </div>
       </div>
 
-      {/* ─── Modal Overlay ─── */}
-      {showModal && (
+      {/* ─── Modal Overlay with Smooth Scroll ─── */}
+      {showModal && mounted && createPortal(
         <div
           style={{
-            position: 'fixed', inset: 0, zIndex: 200,
-            background: 'rgba(28,24,48,0.55)',
+            position: 'fixed', inset: 0, zIndex: 100000,
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(3px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 16,
+            padding: 12,
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
           }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
         >
-          <div className="card" style={{ width: '100%', maxWidth: 520, padding: 0, overflow: 'hidden', background: 'white' }}>
-            {/* Modal header */}
+          <div
+            className="card"
+            style={{
+              width: '100%', maxWidth: 520, padding: 0,
+              maxHeight: 'calc(100dvh - 24px)',
+              display: 'flex', flexDirection: 'column',
+              background: 'white', borderRadius: 16,
+              boxShadow: '0 10px 36px rgba(0,0,0,0.25)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Modal header (Fixed top) */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 20px', borderBottom: '1px solid var(--color-border)',
+              padding: '14px 20px', borderBottom: '1px solid var(--color-border)',
+              background: 'white', flexShrink: 0,
             }}>
-              <h3 style={{ fontWeight: 700, fontSize: 16, color: 'var(--color-ink)' }}>
+              <h3 style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-ink)', margin: 0 }}>
                 {mode === 'post' ? 'Create Post' : 'Create Poll'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ink-soft)', lineHeight: 1 }}
+                style={{
+                  width: 32, height: 32, borderRadius: '50%', background: 'var(--color-bg)',
+                  border: 'none', cursor: 'pointer', color: 'var(--color-ink-soft)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700,
+                }}
               >✕</button>
             </div>
 
-            {/* Mode tabs */}
-            <div style={{ display: 'flex', gap: 8, padding: '14px 20px 0' }}>
+            {/* Mode tabs (Fixed top) */}
+            <div style={{ display: 'flex', gap: 8, padding: '12px 20px 0', background: 'white', flexShrink: 0 }}>
               <button
                 onClick={() => setMode('post')}
                 className={mode === 'post' ? 'btn-brand' : 'btn-ghost'}
-                style={{ fontSize: 13, padding: '7px 16px' }}
+                style={{ fontSize: 13, padding: '7px 18px' }}
               >Post</button>
               <button
                 onClick={() => setMode('poll')}
                 className={mode === 'poll' ? 'btn-brand' : 'btn-ghost'}
-                style={{ fontSize: 13, padding: '7px 16px' }}
+                style={{ fontSize: 13, padding: '7px 18px' }}
               >Poll</button>
             </div>
 
-            <div style={{ padding: '16px 20px 20px' }}>
+            {/* Scrollable Form Body (Smooth mobile scrollable!) */}
+            <div style={{
+              padding: '16px 20px 24px',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              flex: 1,
+              overscrollBehaviorY: 'contain',
+            }}>
               {/* User row */}
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14 }}>
                 {user?.avatar ? (
@@ -330,8 +359,8 @@ export function Composer({ onPost }: ComposerProps) {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button type="submit" className="btn-brand" disabled={loading} style={{ padding: '10px 28px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8 }}>
+                    <button type="submit" className="btn-brand" disabled={loading} style={{ padding: '10px 28px', width: '100%' }}>
                       {loading ? 'Publishing…' : 'Publish Post'}
                     </button>
                   </div>
@@ -429,8 +458,8 @@ export function Composer({ onPost }: ComposerProps) {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button type="submit" className="btn-brand" disabled={loading} style={{ padding: '10px 28px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8 }}>
+                    <button type="submit" className="btn-brand" disabled={loading} style={{ padding: '10px 28px', width: '100%' }}>
                       {loading ? 'Publishing…' : 'Publish Poll'}
                     </button>
                   </div>
@@ -438,7 +467,8 @@ export function Composer({ onPost }: ComposerProps) {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
