@@ -12,7 +12,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly logger = new Logger(PrismaService.name);
 
   async onModuleInit() {
-    await this.$connect();
+    await this.$connect().catch((err) => {
+      this.logger.error(`Prisma initial connection warning: ${err.message}`);
+    });
     await this.ensureSeedData().catch((err) => {
       this.logger.warn(`Auto-seed check: ${err.message}`);
     });
