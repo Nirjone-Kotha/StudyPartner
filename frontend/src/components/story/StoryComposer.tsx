@@ -541,13 +541,6 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
               <h1 style={{ fontSize: 24, fontWeight: 800, color: '#050505', margin: 0 }}>
                 Your story
               </h1>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#65676b',
-              }}>
-                <Settings size={18} />
-              </div>
             </div>
 
             {/* Controls Body (Scrollable) */}

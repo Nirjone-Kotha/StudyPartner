@@ -93,9 +93,41 @@ function MessagesContent() {
     canSendOneMessage: boolean;
   } | null>(null);
 
+  const [globalSearchResults, setGlobalSearchResults] = useState<Conversation['partner'][]>([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounced search for all users across the platform (friends & non-friends)
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q || q.length < 2) {
+      setGlobalSearchResults([]);
+      setIsSearchingGlobal(false);
+      return;
+    }
+
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    setIsSearchingGlobal(true);
+
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const { data } = await api.get<Conversation['partner'][]>(`/users/search?q=${encodeURIComponent(q)}`);
+        setGlobalSearchResults(data || []);
+      } catch {
+        setGlobalSearchResults([]);
+      } finally {
+        setIsSearchingGlobal(false);
+      }
+    }, 250);
+
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
 
   useEffect(() => { hydrate(); }, [hydrate]);
 
@@ -293,6 +325,11 @@ function MessagesContent() {
     ? friends.filter(f => !conversationPartnerIds.has(f.id) && (f.name.toLowerCase().includes(query) || f.handle.toLowerCase().includes(query)))
     : friends;
 
+  const friendIds = new Set(friends.map(f => f.id));
+  const otherUsers = query
+    ? globalSearchResults.filter(u => u.id !== user?.id && !conversationPartnerIds.has(u.id) && !friendIds.has(u.id))
+    : [];
+
   // Active friends for Facebook story horizontal row
   const activeOnlineList = friends.length > 0
     ? friends
@@ -358,7 +395,7 @@ function MessagesContent() {
                 </div>
               </div>
 
-              {/* Messages Dedicated Search Pill Input (Search only within messages and chat contacts) */}
+              {/* Messages Dedicated Search Pill Input (Search chats, friends & all people) */}
               <div style={{
                 display: 'flex', alignItems: 'center',
                 background: 'var(--color-bg)',
@@ -373,7 +410,7 @@ function MessagesContent() {
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Search chats and contacts…"
+                  placeholder="Search chats, contacts and people…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
@@ -437,11 +474,11 @@ function MessagesContent() {
                 </div>
               ) : (
                 (() => {
-                  if (query && filteredConversations.length === 0 && filteredFriends.length === 0) {
+                  if (query && filteredConversations.length === 0 && filteredFriends.length === 0 && otherUsers.length === 0 && !isSearchingGlobal) {
                     return (
                       <div style={{ padding: 36, textAlign: 'center' }}>
                         <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>No results found</p>
-                        <p style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginTop: 4 }}>No chats matching &quot;{searchQuery}&quot;</p>
+                        <p style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginTop: 4 }}>No chats or people matching &quot;{searchQuery}&quot;</p>
                       </div>
                     );
                   }
@@ -464,7 +501,10 @@ function MessagesContent() {
                         return (
                           <button
                             key={partner.id}
-                            onClick={() => setActivePartner(partner)}
+                            onClick={() => {
+                              setActivePartner(partner);
+                              if (query) setSearchQuery('');
+                            }}
                             style={{
                               width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                               padding: '12px 16px', border: 'none',
@@ -526,7 +566,7 @@ function MessagesContent() {
                             color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em',
                             background: 'var(--color-bg)',
                           }}>
-                            {query ? `Suggested Contacts (${filteredFriends.length})` : 'Start a New Chat'}
+                            {query ? `Friends & Contacts (${filteredFriends.length})` : 'Start a New Chat'}
                           </div>
                           {filteredFriends.map((f) => (
                             <button
@@ -563,34 +603,63 @@ function MessagesContent() {
                           ))}
                         </div>
                       )}
+
+                      {/* Matching Non-Friend Users from Platform Search */}
+                      {query && otherUsers.length > 0 && (
+                        <div>
+                          <div style={{
+                            padding: '12px 16px 6px', fontSize: 12, fontWeight: 700,
+                            color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                            background: 'var(--color-bg)',
+                          }}>
+                            People on Study Partner ({otherUsers.length})
+                          </div>
+                          {otherUsers.map((u) => (
+                            <button
+                              key={u.id}
+                              onClick={() => {
+                                setActivePartner({ id: u.id, name: u.name, handle: u.handle, avatar: u.avatar });
+                                setSearchQuery('');
+                              }}
+                              style={{
+                                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                                padding: '12px 16px', border: 'none', background: 'white',
+                                cursor: 'pointer', textAlign: 'left',
+                                transition: 'background 0.15s',
+                              }}
+                              onMouseOver={(e) => (e.currentTarget.style.background = '#f9fafb')}
+                              onMouseOut={(e) => (e.currentTarget.style.background = 'white')}
+                            >
+                              <Avatar user={u} size={48} online={false} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
+                                  {u.name}
+                                </div>
+                                <div style={{ fontSize: 12, color: 'var(--color-ink-faint)' }}>
+                                  @{u.handle}
+                                </div>
+                              </div>
+                              <span style={{
+                                fontSize: 12, color: '#0084FF', fontWeight: 700,
+                                background: '#eff6ff', padding: '5px 12px', borderRadius: 'var(--radius-pill)',
+                              }}>
+                                Message
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {isSearchingGlobal && (
+                        <div style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, color: 'var(--color-ink-faint)' }}>
+                          Searching people…
+                        </div>
+                      )}
                     </div>
                   );
                 })()
               )}
             </div>
-
-            {/* Facebook Messenger Floating Action Button (+) */}
-            <button
-              onClick={() => {
-                searchInputRef.current?.focus();
-              }}
-              style={{
-                position: 'fixed', bottom: 24, right: 20,
-                width: 56, height: 56, borderRadius: '50%',
-                background: '#0084FF', color: 'white',
-                border: 'none', cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(0, 132, 255, 0.4)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                zIndex: 40, transition: 'transform 0.15s, background 0.15s',
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-              onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-              title="New Message"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-            </button>
           </div>
 
           {/* Facebook Direct Chat Thread Panel (On mobile only when activePartner exists, on desktop always) */}
