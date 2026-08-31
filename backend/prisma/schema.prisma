@@ -122,6 +122,7 @@ model Post {
   id          String    @id @default(cuid())
   userId      String
   groupId     String?
+  shareToFeed Boolean   @default(true)
   text        String?
   mediaUrl    String?
   mediaType   MediaType?

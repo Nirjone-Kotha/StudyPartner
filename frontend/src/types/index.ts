@@ -48,6 +48,16 @@ export interface Comment {
 
 export interface Post {
   id: string;
+  groupId?: string | null;
+  shareToFeed?: boolean;
+  group?: {
+    id: string;
+    name: string;
+    category?: string;
+    avatar?: string;
+    isPrivate?: boolean;
+    isMember?: boolean;
+  } | null;
   text?: string;
   mediaUrl?: string;
   mediaType?: MediaType;

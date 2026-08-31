@@ -265,6 +265,28 @@ export function PostCard({ post: initialPost, onDelete, onUpdate }: PostCardProp
     }
   }
 
+  const [joiningGroup, setJoiningGroup] = useState(false);
+
+  async function handleJoinGroup(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!user) return toast.error('Please log in first');
+    if (!post.group) return;
+    if (joiningGroup) return;
+    setJoiningGroup(true);
+    try {
+      await api.post(`/groups/${post.group.id}/join`);
+      toast.success(`Joined ${post.group.name}!`);
+      setPost(prev => ({
+        ...prev,
+        group: prev.group ? { ...prev.group, isMember: true } : null,
+      }));
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not join group');
+    } finally {
+      setJoiningGroup(false);
+    }
+  }
+
   const myReaction = post.reactions?.[0]?.type;
   const isOwner = user?.id === post.user.id;
   const myReactionData = myReaction ? REACTIONS.find(r => r.type === myReaction) : null;
@@ -416,7 +438,7 @@ function containsLink(text?: string): boolean {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}
             onClick={() => router.push(`/profile?handle=${post.user.handle}`)}
           >
             {post.user.avatar ? (
@@ -427,6 +449,44 @@ function containsLink(text?: string): boolean {
               </div>
             )}
             <div>
+              {/* If post belongs to a group, show group info + Join button */}
+              {post.group && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+                  <span
+                    onClick={(e) => { e.stopPropagation(); router.push(`/groups/${post.group!.id}`); }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      fontSize: 12, fontWeight: 700, color: 'var(--color-brand)',
+                      cursor: 'pointer', background: 'var(--color-brand-tint)',
+                      padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                    }}
+                    title="View group"
+                  >
+                    <span>👥</span>
+                    <span>{post.group.name}</span>
+                  </span>
+
+                  {!post.group.isMember && (
+                    <button
+                      onClick={handleJoinGroup}
+                      disabled={joiningGroup}
+                      style={{
+                        border: 'none',
+                        background: 'var(--color-brand)',
+                        color: 'white',
+                        fontSize: 11, fontWeight: 700,
+                        padding: '2px 9px', borderRadius: 'var(--radius-pill)',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
+                        boxShadow: '0 1px 3px rgba(8, 102, 255, 0.25)',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {joiningGroup ? '…' : '+ Join Group'}
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-ink)' }}>{post.user.name}</span>
                 {post.user.isAdmin && <span className="badge badge-brand" style={{ fontSize: 10 }}>⚡ Admin</span>}
@@ -526,6 +586,13 @@ function containsLink(text?: string): boolean {
               alt="Post media"
               style={{ width: '100%', maxHeight: 500, objectFit: 'cover', display: 'block' }}
               loading="lazy"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.dataset.retried) {
+                  target.dataset.retried = 'true';
+                  target.src = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80';
+                }
+              }}
             />
           )}
         </div>

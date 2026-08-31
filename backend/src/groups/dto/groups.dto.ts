@@ -1,4 +1,4 @@
-﻿import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsArray, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsArray, MinLength, MaxLength } from 'class-validator';
 
 export class CreateGroupDto {
   @IsString()
@@ -51,6 +51,10 @@ export class CreateGroupPostDto {
   @IsString()
   @IsOptional()
   explanation?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  shareToFeed?: boolean;
 
   @IsOptional()
   poll?: {

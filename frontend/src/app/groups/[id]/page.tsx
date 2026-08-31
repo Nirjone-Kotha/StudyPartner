@@ -131,64 +131,57 @@ function GroupComposer({
   const [explanation, setExplanation] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [question, setQuestion] = useState('');
-  const [options, setOptions] = useState(['', '', '', '']);
-  const [correctAnswer, setCorrectAnswer] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [shareToFeed, setShareToFeed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  const [question, setQuestion] = useState('');
+  const [options, setOptions] = useState(['', '', '', '']);
+  const [correctAnswer, setCorrectAnswer] = useState(0);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      return toast.error('Photo must be less than 5MB');
-    }
+    if (file.size > 5 * 1024 * 1024) return toast.error('File size must be under 5MB');
     const reader = new FileReader();
     reader.onload = () => {
-      const b64 = reader.result as string;
-      setMediaUrl(b64);
-      setMediaPreview(b64);
+      const dataUrl = reader.result as string;
+      setMediaUrl(dataUrl);
+      setMediaPreview(dataUrl);
     };
     reader.readAsDataURL(file);
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (tab === 'text' && !text.trim() && !mediaUrl.trim()) {
-      return toast.error('Please write something or attach a photo');
-    }
-    if (tab === 'poll') {
-      if (!question.trim()) return toast.error('Please write a poll question');
-      const validOpts = options.filter(o => o.trim());
-      if (validOpts.length < 2) return toast.error('At least 2 options required');
-    }
-
-    if (containsLink(text) || containsLink(explanation) || containsLink(question) || options.some(containsLink)) {
-      return toast.error('Links and URLs are not allowed');
-    }
-
     setLoading(true);
     try {
       if (tab === 'poll') {
-        const validOpts = options.filter(o => o.trim());
+        const validOptions = options.filter(o => o.trim());
+        if (!question.trim()) return toast.error('Please enter a question');
+        if (validOptions.length < 2) return toast.error('Please provide at least 2 options');
+
         const { data } = await api.post<Post>(`/groups/${groupId}/posts`, {
           explanation: explanation.trim() || undefined,
+          shareToFeed,
           poll: {
             question: question.trim(),
-            options: validOpts,
+            options: validOptions.map(o => o.trim()),
             correctAnswer,
           },
         });
-        toast.success('Poll created successfully');
+        toast.success(shareToFeed ? 'Poll posted to Group & Main Feed!' : 'Poll posted to Group!');
         onPostCreated(data);
       } else {
+        if (!text.trim() && !mediaUrl.trim()) return toast.error('Please write something or attach a photo');
         const { data } = await api.post<Post>(`/groups/${groupId}/posts`, {
           text: text.trim() || undefined,
           mediaUrl: mediaUrl.trim() || undefined,
           mediaType: mediaUrl.trim() ? 'IMAGE' : undefined,
           explanation: explanation.trim() || undefined,
+          shareToFeed,
         });
-        toast.success('Post published successfully');
+        toast.success(shareToFeed ? 'Post published to Group & Main Feed!' : 'Post published to Group!');
         onPostCreated(data);
       }
 
@@ -329,9 +322,71 @@ function GroupComposer({
           style={{ fontSize: 13 }}
         />
 
+        <div style={{
+          background: 'var(--color-surface-2)',
+          padding: '12px 14px',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--color-border)',
+          marginTop: 2,
+          display: 'flex', flexDirection: 'column', gap: 8,
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Post Destination (কোথায় পোস্ট হবে)
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setShareToFeed(false)}
+              style={{
+                flex: 1, minWidth: 140, padding: '8px 12px',
+                borderRadius: 'var(--radius-pill)',
+                border: !shareToFeed ? '1.5px solid var(--color-brand)' : '1px solid var(--color-border)',
+                background: !shareToFeed ? 'var(--color-brand-tint)' : 'white',
+                color: !shareToFeed ? 'var(--color-brand)' : 'var(--color-ink-soft)',
+                fontWeight: !shareToFeed ? 700 : 600,
+                fontSize: 12.5, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all 0.15s',
+              }}
+            >
+              <span>👥 Group Only</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShareToFeed(true)}
+              style={{
+                flex: 1, minWidth: 140, padding: '8px 12px',
+                borderRadius: 'var(--radius-pill)',
+                border: shareToFeed ? '1.5px solid var(--color-brand)' : '1px solid var(--color-border)',
+                background: shareToFeed ? 'var(--color-brand-tint)' : 'white',
+                color: shareToFeed ? 'var(--color-brand)' : 'var(--color-ink-soft)',
+                fontWeight: shareToFeed ? 700 : 600,
+                fontSize: 12.5, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                transition: 'all 0.15s',
+              }}
+            >
+              <span>🌐 Group & Main Feed</span>
+            </button>
+          </div>
+          <p style={{ fontSize: 11.5, color: 'var(--color-ink-soft)', margin: 0, lineHeight: 1.4 }}>
+            {shareToFeed
+              ? '✨ এই পোস্টটি গ্রুপের পাশাপাশি সবার জেনারেল হোম ফিডে যাবে এবং গ্রুপের নাম ও জয়েন বাটন থাকবে।'
+              : '🔒 এই পোস্টটি শুধুমাত্র এই গ্রুপের অভ্যন্তরীণ ফিডে থাকবে (জেনারেল হোম ফিডে যাবে না)।'}
+          </p>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
-          <button type="submit" className="btn-brand" disabled={loading} style={{ padding: '8px 22px', fontSize: 13 }}>
-            {loading ? 'Posting…' : 'Post to Group'}
+          <button
+            type="submit"
+            className="btn-brand"
+            disabled={loading}
+            style={{
+              padding: '9px 24px', fontSize: 13.5, fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            {loading ? 'Posting…' : shareToFeed ? 'Post to Group & Feed 🌐' : 'Post to Group 👥'}
           </button>
         </div>
       </form>

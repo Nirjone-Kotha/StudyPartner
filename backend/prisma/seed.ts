@@ -7,8 +7,14 @@ const prisma = new PrismaClient();
 
 const AV = (seed: string) =>
   `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=EFEAFE,FFE7E0,FFF6DC`;
-const PIC = (id: number, w = 800, h = 500) =>
-  `https://picsum.photos/id/${id}/${w}/${h}`;
+const PIC = (id: number, w = 800, h = 500) => {
+  const map: Record<number, string> = {
+    1015: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80',
+    292: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80',
+    1016: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80',
+  };
+  return map[id] || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=${w}&auto=format&fit=crop&q=80`;
+};
 
 async function main() {
   const hash = (pw: string) => bcrypt.hash(pw, 10);
@@ -103,7 +109,14 @@ async function main() {
   // Seed posts
   const welcome = await prisma.post.upsert({
     where: { id: 'seed-post-1' },
-    update: {},
+    update: {
+      text: 'Welcome to Study Partner! 🎉 Share your thoughts, photos, or create MCQ polls to engage your community.',
+      mediaUrl: PIC(1015),
+      mediaType: 'IMAGE',
+      featured: true,
+      pinned: true,
+      type: 'TEXT',
+    },
     create: {
       id: 'seed-post-1',
       userId: admin.id,
@@ -118,7 +131,12 @@ async function main() {
 
   await prisma.post.upsert({
     where: { id: 'seed-post-2' },
-    update: {},
+    update: {
+      text: 'Fresh batch of cardamom rolls just came out of the oven 😋 Will share the recipe soon!',
+      mediaUrl: PIC(292),
+      mediaType: 'IMAGE',
+      type: 'TEXT',
+    },
     create: {
       id: 'seed-post-2',
       userId: priya.id,
@@ -131,7 +149,12 @@ async function main() {
 
   await prisma.post.upsert({
     where: { id: 'seed-post-3' },
-    update: {},
+    update: {
+      text: 'Golden hour over the tea gardens this morning. Sylhet never disappoints 🌄',
+      mediaUrl: PIC(1016),
+      mediaType: 'IMAGE',
+      type: 'TEXT',
+    },
     create: {
       id: 'seed-post-3',
       userId: rafiul.id,

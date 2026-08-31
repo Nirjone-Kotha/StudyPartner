@@ -27,6 +27,17 @@ export class PostsService {
     return {
       id: true, text: true, mediaUrl: true, mediaType: true,
       explanation: true, featured: true, pinned: true, type: true, createdAt: true,
+      groupId: true,
+      group: {
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          avatar: true,
+          isPrivate: true,
+          members: userId ? { where: { userId }, select: { role: true } } : false,
+        },
+      },
       user: {
         select: {
           id: true, name: true, handle: true, avatar: true, isAdmin: true,
@@ -67,8 +78,36 @@ export class PostsService {
       ? p.reactions.find((r: any) => r.userId === userId)
       : null;
 
+    let mediaUrl = p.mediaUrl;
+    if (mediaUrl && (mediaUrl.includes('picsum.photos') || mediaUrl.includes('fastly.picsum.photos'))) {
+      if (mediaUrl.includes('1015')) {
+        mediaUrl = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80';
+      } else if (mediaUrl.includes('292')) {
+        mediaUrl = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80';
+      } else if (mediaUrl.includes('1016')) {
+        mediaUrl = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80';
+      } else {
+        mediaUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80';
+      }
+    } else if (!mediaUrl && p.id === 'seed-post-1') {
+      mediaUrl = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80';
+    } else if (!mediaUrl && p.id === 'seed-post-2') {
+      mediaUrl = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80';
+    } else if (!mediaUrl && p.id === 'seed-post-3') {
+      mediaUrl = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80';
+    }
+
     return {
       ...p,
+      mediaUrl,
+      group: p.group ? {
+        id: p.group.id,
+        name: p.group.name,
+        category: p.group.category,
+        avatar: p.group.avatar,
+        isPrivate: p.group.isPrivate,
+        isMember: Array.isArray(p.group.members) && p.group.members.length > 0,
+      } : null,
       user: p.user ? {
         ...p.user,
         followersCount: p.user._count?.followers ?? 0,
@@ -98,6 +137,12 @@ export class PostsService {
     }
 
     let rawPosts = await this.prisma.post.findMany({
+      where: {
+        OR: [
+          { groupId: null },
+          { shareToFeed: true },
+        ],
+      },
       skip,
       take: limit,
       orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
@@ -107,6 +152,12 @@ export class PostsService {
     if (rawPosts.length === 0 && page === 1) {
       await this.prisma.ensureSeedData().catch(() => {});
       rawPosts = await this.prisma.post.findMany({
+        where: {
+          OR: [
+            { groupId: null },
+            { shareToFeed: true },
+          ],
+        },
         skip,
         take: limit,
         orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],

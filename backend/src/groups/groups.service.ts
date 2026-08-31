@@ -20,6 +20,17 @@ export class GroupsService {
     return {
       id: true, text: true, mediaUrl: true, mediaType: true,
       explanation: true, featured: true, pinned: true, type: true, createdAt: true,
+      groupId: true,
+      group: {
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          avatar: true,
+          isPrivate: true,
+          members: userId ? { where: { userId }, select: { role: true } } : false,
+        },
+      },
       user: { select: { id: true, name: true, handle: true, avatar: true, isAdmin: true } },
       _count: { select: { reactions: true, comments: true } },
       reactions: userId ? { where: { userId }, select: { type: true } } : false,
@@ -302,6 +313,7 @@ export class GroupsService {
         data: {
           userId,
           groupId,
+          shareToFeed: dto.shareToFeed ?? false,
           type: 'POLL',
           explanation: dto.explanation,
           poll: {
@@ -327,6 +339,7 @@ export class GroupsService {
       data: {
         userId,
         groupId,
+        shareToFeed: dto.shareToFeed ?? false,
         text: dto.text,
         mediaUrl: dto.mediaUrl,
         mediaType: dto.mediaType as any,
