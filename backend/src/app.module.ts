@@ -16,7 +16,10 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { GroupsModule } from './groups/groups.module';
 import { StoriesModule } from './stories/stories.module';
 
+import { AppController } from './app.controller';
+
 @Module({
+  controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
