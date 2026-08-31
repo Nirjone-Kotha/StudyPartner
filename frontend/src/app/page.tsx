@@ -24,19 +24,12 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post<AuthResponse>('/auth/login', {
-        email: loginForm.email.trim(),
-        password: loginForm.password,
-      });
+      const { data } = await api.post<AuthResponse>('/auth/login', loginForm);
       setAuth(data.user, data.token);
       toast.success(`Welcome back, ${data.user.name}!`);
       router.push('/feed');
     } catch (err: any) {
-      if (!err.response) {
-        toast.error('Connecting to backend... If Render server was sleeping, please wait a few seconds and try again.', { duration: 6000 });
-      } else {
-        toast.error(err.response?.data?.message || 'Login failed');
-      }
+      toast.error(err.response?.data?.message || 'Login failed');
     } finally { setLoading(false); }
   }
 
@@ -44,27 +37,13 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post<AuthResponse>('/auth/register', {
-        name: signupForm.name.trim(),
-        email: signupForm.email.trim(),
-        handle: signupForm.handle.trim(),
-        password: signupForm.password,
-      });
+      const { data } = await api.post<AuthResponse>('/auth/register', signupForm);
       setAuth(data.user, data.token);
       toast.success(`Welcome to Study Partner, ${data.user.name}! 🎉`);
       router.push('/feed');
     } catch (err: any) {
-      if (!err.response) {
-        toast.error('Connecting to backend... If Render server was sleeping, please wait a few seconds and try again.', { duration: 6000 });
-      } else {
-        toast.error(err.response?.data?.message || 'Registration failed');
-      }
+      toast.error(err.response?.data?.message || 'Registration failed');
     } finally { setLoading(false); }
-  }
-
-  function setQuickAccount(email: string) {
-    setLoginForm({ email, password: 'password123' });
-    toast.success(`Filled credentials for ${email}`);
   }
 
   return (
@@ -77,11 +56,11 @@ export default function AuthPage() {
 
       <div style={{ width: '100%', maxWidth: 440 }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 12,
             background: 'white', padding: '12px 28px',
-            borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-md)', marginBottom: 14,
+            borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-md)', marginBottom: 16,
           }}>
             <svg width="34" height="34" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="32" height="32" rx="8" fill="var(--color-brand)"/>
@@ -106,11 +85,11 @@ export default function AuthPage() {
         </div>
 
         {/* Card */}
-        <div className="card" style={{ padding: 28, background: 'white' }}>
+        <div className="card" style={{ padding: 32 }}>
           {/* Tabs */}
           <div style={{
             display: 'grid', gridTemplateColumns: '1fr 1fr',
-            background: 'var(--color-bg)', borderRadius: 'var(--radius-sm)', padding: 4, marginBottom: 24,
+            background: 'var(--color-bg)', borderRadius: 'var(--radius-sm)', padding: 4, marginBottom: 28,
           }}>
             {(['login', 'signup'] as const).map((t) => (
               <button key={t} onClick={() => setTab(t)} style={{
@@ -129,12 +108,12 @@ export default function AuthPage() {
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 6 }}>
-                  Email or Username
+                  Email or Handle
                 </label>
                 <input
                   className="input"
                   type="text"
-                  placeholder="priya@example.com or priya.n"
+                  placeholder="you@example.com or priya.n"
                   required
                   value={loginForm.email}
                   onChange={(e) => setLoginForm(f => ({ ...f, email: e.target.value }))}
@@ -153,71 +132,41 @@ export default function AuthPage() {
                   onChange={(e) => setLoginForm(f => ({ ...f, password: e.target.value }))}
                 />
               </div>
-              <button className="btn-brand" type="submit" disabled={loading} style={{ width: '100%', marginTop: 4 }}>
-                {loading ? 'Connecting & Logging in…' : 'Log In'}
+              <button className="btn-brand" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
+                {loading ? 'Logging in…' : 'Log In'}
               </button>
 
-              {/* Quick sample accounts */}
-              <div style={{ marginTop: 8, padding: '12px', background: 'var(--color-bg)', borderRadius: 12, border: '1px solid var(--color-border)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-ink-soft)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Quick Demo Accounts (Password: password123)
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => setQuickAccount('priya@example.com')}
-                    style={{ fontSize: 12, padding: '5px 10px', background: 'white', border: '1px solid var(--color-border)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-brand)', fontWeight: 600 }}
-                  >
-                    🍰 Priya
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setQuickAccount('tanvir@example.com')}
-                    style={{ fontSize: 12, padding: '5px 10px', background: 'white', border: '1px solid var(--color-border)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-brand)', fontWeight: 600 }}
-                  >
-                    💻 Tanvir
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setQuickAccount('admin@funstore.com')}
-                    style={{ fontSize: 12, padding: '5px 10px', background: 'white', border: '1px solid var(--color-border)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-brand)', fontWeight: 600 }}
-                  >
-                    ⚙️ Admin
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-ink-soft)', marginTop: 4 }}>
+              <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-ink-soft)' }}>
                 <a href="/admin/login" style={{ color: 'var(--color-brand)', textDecoration: 'none', fontWeight: 600 }}>
                   Go to Admin Panel →
                 </a>
               </div>
             </form>
           ) : (
-            <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 4 }}>Full Name</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 6 }}>Full Name</label>
                   <input className="input" placeholder="Jane Doe" required minLength={2}
                     value={signupForm.name} onChange={(e) => setSignupForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 4 }}>Username</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 6 }}>Handle</label>
                   <input className="input" placeholder="jane.doe" required minLength={3}
                     value={signupForm.handle} onChange={(e) => setSignupForm(f => ({ ...f, handle: e.target.value }))} />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 4 }}>Email</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 6 }}>Email</label>
                 <input className="input" type="email" placeholder="you@example.com" required
                   value={signupForm.email} onChange={(e) => setSignupForm(f => ({ ...f, email: e.target.value }))} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 4 }}>Password</label>
-                <input className="input" type="password" placeholder="Min. 6 characters" required minLength={6}
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-ink-soft)', marginBottom: 6 }}>Password</label>
+                <input className="input" type="password" placeholder="Min. 8 characters" required minLength={8}
                   value={signupForm.password} onChange={(e) => setSignupForm(f => ({ ...f, password: e.target.value }))} />
               </div>
-              <button className="btn-brand" type="submit" disabled={loading} style={{ width: '100%', marginTop: 6 }}>
+              <button className="btn-brand" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
                 {loading ? 'Creating account…' : 'Create Account'}
               </button>
             </form>

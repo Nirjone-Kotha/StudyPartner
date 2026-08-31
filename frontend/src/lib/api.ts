@@ -8,7 +8,7 @@ const getBaseURL = () => {
 
 const api = axios.create({
   baseURL: getBaseURL(),
-  timeout: 45000, // 45s timeout for Render server spin-up
+  timeout: 45000, // 45s timeout for Render free-tier cold-start
   headers: { 'Content-Type': 'application/json' },
 });
 

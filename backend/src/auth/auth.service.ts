@@ -12,30 +12,22 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const email = dto.email.trim().toLowerCase();
-    const handle = dto.handle.trim().toLowerCase();
-
     const existing = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: { equals: email, mode: 'insensitive' } },
-          { handle: { equals: handle, mode: 'insensitive' } },
-        ],
-      },
+      where: { OR: [{ email: dto.email }, { handle: dto.handle }] },
     });
     if (existing) throw new ConflictException('Email or handle already taken');
 
-    const hash = await bcrypt.hash(dto.password, 10);
+    const hash = await bcrypt.hash(dto.password, 12);
     const AV = (seed: string) =>
       `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=EFEAFE,FFE7E0,FFF6DC`;
 
     const user = await this.prisma.user.create({
       data: {
-        name: dto.name.trim(),
-        email,
-        handle,
+        name: dto.name,
+        email: dto.email,
+        handle: dto.handle,
         password: hash,
-        avatar: AV(handle),
+        avatar: AV(dto.handle),
       },
       select: { id: true, email: true, name: true, handle: true, avatar: true, isAdmin: true },
     });
@@ -44,10 +36,9 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    // Auto-seed check in case database is freshly created/empty
     await this.prisma.ensureSeedData().catch(() => {});
 
-    const identifier = (dto.email || '').trim().toLowerCase();
+    const identifier = (dto.email || '').trim();
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [
