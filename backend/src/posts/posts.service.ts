@@ -58,12 +58,22 @@ export class PostsService {
       }
     }
 
-    const posts = await this.prisma.post.findMany({
+    let posts = await this.prisma.post.findMany({
       skip,
       take: limit,
       orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
       select: this.postSelect(userId),
     });
+
+    if (posts.length === 0 && page === 1) {
+      await this.prisma.ensureSeedData().catch(() => {});
+      posts = await this.prisma.post.findMany({
+        skip,
+        take: limit,
+        orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
+        select: this.postSelect(userId),
+      });
+    }
 
     const result = { posts, page, limit };
     if (page === 1 && posts.length > 0) {
