@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
@@ -114,15 +115,20 @@ function InviteModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1100, backdropFilter: 'blur(3px)' }} />
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100005, backdropFilter: 'blur(3px)' }} />
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: 'white', zIndex: 1200,
+        background: 'white', zIndex: 100010,
         borderRadius: '20px 20px 0 0',
         padding: '20px 20px calc(env(safe-area-inset-bottom, 0px) + 20px)',
-        boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+        boxShadow: '0 -8px 32px rgba(0,0,0,0.25)',
         maxHeight: '88vh', overflowY: 'auto',
       }}>
         <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 99, margin: '0 auto 16px' }} />
@@ -179,7 +185,8 @@ function InviteModal({ onClose }: { onClose: () => void }) {
           style={{ width: '100%', padding: '13px', border: 'none', borderRadius: 14, background: 'var(--color-bg)', color: 'var(--color-ink-soft)', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
         >Cancel</button>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
@@ -188,6 +195,9 @@ function MenuDrawer({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const { user, clearAuth } = useAuth();
   const [showInvite, setShowInvite] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const items = [
     {
@@ -260,28 +270,41 @@ function MenuDrawer({ onClose }: { onClose: () => void }) {
       action: () => { router.push('/feed'); onClose(); },
       color: '#FF9800',
     },
+    {
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      ),
+      label: 'Log Out',
+      action: () => { clearAuth(); onClose(); router.push('/'); },
+      color: '#dc2626',
+    },
   ];
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       <div
         onClick={onClose}
         style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-          zIndex: 999, backdropFilter: 'blur(2px)',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          zIndex: 99999, backdropFilter: 'blur(3px)',
         }}
       />
       <div style={{
         position: 'fixed', top: 0, right: 0, bottom: 0, width: '85%', maxWidth: 360,
-        background: 'var(--color-bg)', zIndex: 1000,
+        background: 'var(--color-bg)', zIndex: 100000,
         overflowY: 'auto',
-        boxShadow: '-4px 0 24px rgba(0,0,0,0.18)',
+        boxShadow: '-4px 0 32px rgba(0,0,0,0.25)',
         display: 'flex', flexDirection: 'column',
       }}>
         <div style={{
           padding: '18px 20px 12px',
           borderBottom: '1px solid var(--color-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'white',
         }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--color-brand)' }}>Menu</span>
           <button
@@ -295,7 +318,7 @@ function MenuDrawer({ onClose }: { onClose: () => void }) {
             onClick={() => { router.push(`/profile?handle=${user.handle}`); onClose(); }}
             style={{
               display: 'flex', alignItems: 'center', gap: 14,
-              padding: '16px 20px', border: 'none', background: 'none',
+              padding: '16px 20px', border: 'none', background: 'white',
               cursor: 'pointer', textAlign: 'left', width: '100%',
               borderBottom: '1px solid var(--color-border)',
             }}
@@ -336,7 +359,7 @@ function MenuDrawer({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Log out option at bottom of menu */}
-        <div style={{ padding: '12px 16px 24px', borderTop: '1px solid var(--color-border)' }}>
+        <div style={{ padding: '14px 16px 24px', borderTop: '1px solid var(--color-border)', background: 'white' }}>
           <button
             onClick={() => {
               clearAuth();
@@ -344,17 +367,23 @@ function MenuDrawer({ onClose }: { onClose: () => void }) {
               router.push('/');
             }}
             style={{
-              width: '100%', padding: '12px', borderRadius: 12,
-              border: 'none', background: '#fee2e2', color: '#dc2626',
-              fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              width: '100%', padding: '14px', borderRadius: 14,
+              border: '1px solid #fca5a5', background: '#fef2f2', color: '#dc2626',
+              fontWeight: 700, fontSize: 15, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              boxShadow: '0 2px 6px rgba(220, 38, 38, 0.08)',
             }}
           >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
             Log Out
           </button>
         </div>
       </div>
       {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
-    </>
+    </>,
+    document.body
   );
 }
 
