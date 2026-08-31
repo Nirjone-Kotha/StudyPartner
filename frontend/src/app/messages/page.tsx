@@ -7,7 +7,6 @@ import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { LeftNav } from '@/components/layout/LeftNav';
 import { Topbar } from '@/components/layout/Topbar';
-import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import type { Conversation, Message, User } from '@/types';
 
 function timeAgo(dateStr: string) {
@@ -21,25 +20,60 @@ function timeAgo(dateStr: string) {
   return `${d}d`;
 }
 
-function Avatar({ user, size = 40 }: { user: Pick<User, 'name' | 'avatar'>; size?: number }) {
-  if (user.avatar) {
-    return (
-      <Image
-        src={user.avatar} alt={user.name}
-        width={size} height={size}
-        className="avatar" unoptimized
-        style={{ width: size, height: size, flexShrink: 0 }}
-      />
-    );
-  }
+function Avatar({
+  user,
+  size = 40,
+  online = true,
+  note,
+}: {
+  user: Pick<User, 'name' | 'avatar'>;
+  size?: number;
+  online?: boolean;
+  note?: string;
+}) {
   return (
-    <div className="avatar" style={{
-      width: size, height: size, flexShrink: 0,
-      background: 'var(--color-brand-tint)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.4, fontWeight: 700, color: 'var(--color-brand)',
-    }}>
-      {user.name?.[0]?.toUpperCase()}
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      {note && (
+        <div style={{
+          position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+          background: 'white', border: '1px solid #e2e8f0', borderRadius: 12,
+          padding: '2px 8px', fontSize: 10, fontWeight: 600, color: 'var(--color-ink)',
+          whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', zIndex: 2,
+        }}>
+          {note}
+        </div>
+      )}
+      {user.avatar ? (
+        <Image
+          src={user.avatar}
+          alt={user.name}
+          width={size}
+          height={size}
+          className="avatar"
+          unoptimized
+          style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }}
+        />
+      ) : (
+        <div className="avatar" style={{
+          width: size, height: size,
+          background: 'var(--color-brand-tint)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: size * 0.4, fontWeight: 700, color: 'var(--color-brand)',
+          borderRadius: '50%',
+        }}>
+          {user.name?.[0]?.toUpperCase()}
+        </div>
+      )}
+      {online && (
+        <span style={{
+          position: 'absolute', bottom: 1, right: 1,
+          width: Math.max(10, Math.round(size * 0.26)),
+          height: Math.max(10, Math.round(size * 0.26)),
+          background: '#22c55e',
+          border: '2px solid white',
+          borderRadius: '50%',
+        }} />
+      )}
     </div>
   );
 }
@@ -52,6 +86,7 @@ function MessagesContent() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [friends, setFriends] = useState<Conversation['partner'][]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchInput, setShowSearchInput] = useState(false);
   const [activePartner, setActivePartner] = useState<Conversation['partner'] | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
@@ -60,6 +95,7 @@ function MessagesContent() {
   const [sending, setSending] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showBlockMenu, setShowBlockMenu] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [partnerStatus, setPartnerStatus] = useState<{
     isFriends: boolean;
     requestStatus: string;
@@ -73,6 +109,7 @@ function MessagesContent() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { hydrate(); }, [hydrate]);
 
@@ -243,6 +280,22 @@ function MessagesContent() {
     (partnerStatus?.requestStatus === 'PENDING_SENT' && !partnerStatus?.isFriends) ||
     (partnerStatus?.isDeclinedBlocked && !partnerStatus?.isFriends);
 
+  // Filtered queries
+  const query = searchQuery.trim().toLowerCase();
+  const filteredConversations = query
+    ? conversations.filter(c => c.partner.name.toLowerCase().includes(query) || c.partner.handle.toLowerCase().includes(query))
+    : conversations;
+
+  const conversationPartnerIds = new Set(filteredConversations.map(c => c.partner.id));
+  const filteredFriends = query
+    ? friends.filter(f => !conversationPartnerIds.has(f.id) && (f.name.toLowerCase().includes(query) || f.handle.toLowerCase().includes(query)))
+    : friends;
+
+  // Active friends for Facebook story/note horizontal row
+  const activeOnlineList = friends.length > 0
+    ? friends
+    : conversations.map(c => c.partner);
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       <Toaster position="top-center" />
@@ -252,39 +305,116 @@ function MessagesContent() {
         maxWidth: 1100, margin: '0 auto', padding: '0 16px',
         display: 'flex', gap: 20, paddingTop: 76,
       }}>
-        <LeftNav />
+        {/* Left sidebar only on desktop */}
+        <div className="hide-on-mobile" style={{ width: 240, flexShrink: 0 }}>
+          <LeftNav />
+        </div>
 
         {/* Messages layout */}
-        <main style={{ flex: 1, display: 'flex', gap: 16, minWidth: 0, height: 'calc(100vh - 96px)' }}>
-          {/* Sidebar: Conversations & Friends */}
-          <div className="card" style={{
-            width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', padding: 0,
-          }}>
-            {/* Header + Telegram-style Search Bar */}
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)', background: 'white' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>Messages</h2>
-                <span style={{ fontSize: 12, color: 'var(--color-ink-faint)', fontWeight: 600 }}>
-                  {conversations.length} chats
-                </span>
+        <main style={{
+          flex: 1, display: 'flex', gap: 16, minWidth: 0,
+          height: 'calc(100vh - 96px)',
+        }}>
+          {/* Conversation List Panel (Always on desktop, on mobile only when no active thread) */}
+          <div
+            className={`card ${activePartner ? 'hide-on-mobile' : ''}`}
+            style={{
+              width: 340, flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden', padding: 0,
+              background: 'white',
+            }}
+          >
+            {/* Facebook Messenger Header (Mobile/Desktop) */}
+            <div style={{
+              padding: '14px 16px 10px',
+              borderBottom: '1px solid var(--color-border)',
+              background: 'white',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    onClick={() => router.push('/feed')}
+                    style={{
+                      border: 'none', background: 'none', cursor: 'pointer',
+                      fontSize: 20, color: 'var(--color-ink)', padding: '0 4px',
+                      display: 'flex', alignItems: 'center',
+                    }}
+                    title="Back to Feed"
+                  >
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  </button>
+                  <h1 style={{
+                    fontSize: 22, fontWeight: 800, color: 'var(--color-ink)',
+                    letterSpacing: '-0.4px', margin: 0,
+                  }}>
+                    Messages
+                  </h1>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {/* Settings Gear with Red Dot */}
+                  <button
+                    onClick={() => setShowSettingsModal(v => !v)}
+                    style={{
+                      position: 'relative', width: 36, height: 36, borderRadius: '50%',
+                      background: 'var(--color-bg)', border: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'var(--color-ink)',
+                    }}
+                    title="Message Settings"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    <span style={{
+                      position: 'absolute', top: 6, right: 6,
+                      width: 7, height: 7, background: '#ef4444',
+                      borderRadius: '50%', border: '1.5px solid white',
+                    }} />
+                  </button>
+
+                  {/* Search Icon Toggle */}
+                  <button
+                    onClick={() => {
+                      setShowSearchInput(v => !v);
+                      setTimeout(() => searchInputRef.current?.focus(), 100);
+                    }}
+                    style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: 'var(--color-bg)', border: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'var(--color-ink)',
+                    }}
+                    title="Search"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              {/* Search Bar */}
+              {/* Facebook Search Pill Input */}
               <div style={{
                 display: 'flex', alignItems: 'center',
                 background: 'var(--color-bg)',
                 borderRadius: 'var(--radius-pill)',
-                padding: '6px 12px',
+                padding: '7px 14px',
                 border: '1px solid var(--color-border)',
                 transition: 'border-color 0.15s',
               }}>
-                <span style={{ color: 'var(--color-ink-faint)', fontSize: 13, marginRight: 8, display: 'flex', alignItems: 'center' }}>
-                  🔍
-                </span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink-faint)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8, flexShrink: 0 }}>
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
                 <input
+                  ref={searchInputRef}
                   type="text"
-                  placeholder="Search friends or chats…"
+                  placeholder="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
@@ -292,7 +422,7 @@ function MessagesContent() {
                     background: 'transparent',
                     outline: 'none',
                     width: '100%',
-                    fontSize: 13,
+                    fontSize: 14,
                     color: 'var(--color-ink)',
                   }}
                 />
@@ -300,16 +430,9 @@ function MessagesContent() {
                   <button
                     onClick={() => setSearchQuery('')}
                     style={{
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--color-ink-faint)',
-                      fontSize: 13,
-                      padding: '0 2px',
-                      display: 'flex',
-                      alignItems: 'center',
+                      border: 'none', background: 'none', cursor: 'pointer',
+                      color: 'var(--color-ink-faint)', fontSize: 14, padding: '0 2px',
                     }}
-                    title="Clear search"
                   >
                     ✕
                   </button>
@@ -317,103 +440,143 @@ function MessagesContent() {
               </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            {/* Facebook Style Horizontal Active/Notes Avatars Row */}
+            {!query && (
+              <div style={{
+                padding: '12px 14px 10px',
+                borderBottom: '1px solid var(--color-border)',
+                background: 'white',
+                display: 'flex', gap: 14,
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+              }}>
+                {/* 1st Item: "Your note" */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}>
+                  <Avatar user={user} size={54} online={true} note="Share a note…" />
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-ink-soft)', maxWidth: 58, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    Your note
+                  </span>
+                </div>
+
+                {/* Active Online Friends */}
+                {activeOnlineList.map((f) => (
+                  <div
+                    key={f.id}
+                    onClick={() => setActivePartner({ id: f.id, name: f.name, handle: f.handle, avatar: f.avatar })}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}
+                  >
+                    <Avatar user={f} size={54} online={true} />
+                    <span style={{
+                      fontSize: 11.5, fontWeight: 600, color: 'var(--color-ink)',
+                      maxWidth: 60, textAlign: 'center', overflow: 'hidden',
+                      textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {f.name.split(' ')[0]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Facebook Style Conversation Thread List */}
+            <div style={{ flex: 1, overflowY: 'auto', background: 'white' }}>
               {loadingConvos ? (
-                <div style={{ padding: 24, textAlign: 'center', color: 'var(--color-ink-faint)', fontSize: 14 }}>Loading…</div>
+                <div style={{ padding: 28, textAlign: 'center', color: 'var(--color-ink-faint)', fontSize: 14 }}>
+                  Loading chats…
+                </div>
               ) : (
                 (() => {
-                  const query = searchQuery.trim().toLowerCase();
-                  const filteredConversations = query
-                    ? conversations.filter(c => c.partner.name.toLowerCase().includes(query) || c.partner.handle.toLowerCase().includes(query))
-                    : conversations;
-
-                  const conversationPartnerIds = new Set(filteredConversations.map(c => c.partner.id));
-                  const filteredFriends = query
-                    ? friends.filter(f => !conversationPartnerIds.has(f.id) && (f.name.toLowerCase().includes(query) || f.handle.toLowerCase().includes(query)))
-                    : [];
-
                   if (query && filteredConversations.length === 0 && filteredFriends.length === 0) {
                     return (
                       <div style={{ padding: 36, textAlign: 'center' }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>No results found</p>
-                        <p style={{ fontSize: 12, color: 'var(--color-ink-soft)', marginTop: 4 }}>No friends or conversations matching &quot;{searchQuery}&quot;</p>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>No results found</p>
+                        <p style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginTop: 4 }}>No chats matching &quot;{searchQuery}&quot;</p>
                       </div>
                     );
                   }
 
-                  if (!query && conversations.length === 0) {
+                  if (!query && conversations.length === 0 && friends.length === 0) {
                     return (
-                      <div style={{ padding: 24, textAlign: 'center' }}>
-                        <p style={{ fontSize: 13, color: 'var(--color-ink-soft)' }}>No conversations yet.<br />Search a friend above to start chatting.</p>
+                      <div style={{ padding: 36, textAlign: 'center' }}>
+                        <p style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>
+                          No conversations yet.<br />Tap any friend above to start chatting.
+                        </p>
                       </div>
                     );
                   }
 
                   return (
-                    <>
-                      {/* Matching Active Conversations */}
-                      {filteredConversations.length > 0 && (
-                        <div>
-                          {query && (
-                            <div style={{ padding: '8px 16px 4px', fontSize: 11, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              Recent Chats ({filteredConversations.length})
-                            </div>
-                          )}
-                          {filteredConversations.map(({ partner, lastMessage, unreadCount }) => {
-                            const isActive = activePartner?.id === partner.id;
-                            return (
-                              <button
-                                key={partner.id}
-                                onClick={() => setActivePartner(partner)}
-                                style={{
-                                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                                  padding: '12px 16px', border: 'none', borderRadius: 0,
-                                  background: isActive ? 'var(--color-brand-tint)' : 'transparent',
-                                  cursor: 'pointer', textAlign: 'left',
-                                  borderBottom: '1px solid var(--color-border)',
-                                  transition: 'background 0.15s',
-                                }}
-                              >
-                                <Avatar user={partner} size={42} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontWeight: unreadCount > 0 ? 700 : 600, fontSize: 14, color: 'var(--color-ink)' }}>
-                                      {partner.name}
-                                    </span>
-                                    <span style={{ fontSize: 11, color: 'var(--color-ink-faint)' }}>
-                                      {timeAgo(lastMessage.createdAt)}
-                                    </span>
-                                  </div>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
-                                    <span style={{
-                                      fontSize: 12,
-                                      color: unreadCount > 0 ? 'var(--color-ink-soft)' : 'var(--color-ink-faint)',
-                                      fontWeight: unreadCount > 0 ? 600 : 400,
-                                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 170,
-                                    }}>
-                                      {lastMessage.isOwn ? 'You: ' : ''}{lastMessage.text}
-                                    </span>
-                                    {unreadCount > 0 && (
-                                      <span style={{
-                                        background: 'var(--color-brand)', color: 'white',
-                                        borderRadius: '50%', width: 18, height: 18,
-                                        fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        flexShrink: 0,
-                                      }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
-                                    )}
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {/* Active Recent Conversations */}
+                      {filteredConversations.map(({ partner, lastMessage, unreadCount }) => {
+                        const isActive = activePartner?.id === partner.id;
+                        return (
+                          <button
+                            key={partner.id}
+                            onClick={() => setActivePartner(partner)}
+                            style={{
+                              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                              padding: '12px 16px', border: 'none',
+                              background: isActive ? 'var(--color-brand-tint)' : 'white',
+                              cursor: 'pointer', textAlign: 'left',
+                              transition: 'background 0.15s',
+                            }}
+                            onMouseOver={(e) => { if (!isActive) e.currentTarget.style.background = '#f9fafb'; }}
+                            onMouseOut={(e) => { if (!isActive) e.currentTarget.style.background = 'white'; }}
+                          >
+                            <Avatar user={partner} size={52} online={true} />
 
-                      {/* Matching Friends who don't have an active conversation yet */}
-                      {filteredFriends.length > 0 && (
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{
+                                  fontWeight: unreadCount > 0 ? 800 : 600,
+                                  fontSize: 15,
+                                  color: 'var(--color-ink)',
+                                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}>
+                                  {partner.name}
+                                </span>
+                              </div>
+
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
+                                <span style={{
+                                  fontSize: 13,
+                                  color: unreadCount > 0 ? 'var(--color-ink)' : 'var(--color-ink-soft)',
+                                  fontWeight: unreadCount > 0 ? 700 : 400,
+                                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%',
+                                }}>
+                                  {lastMessage.isOwn ? 'You: ' : ''}{lastMessage.text}
+                                  <span style={{ color: 'var(--color-ink-faint)', fontWeight: 400, marginLeft: 6 }}>
+                                    · {timeAgo(lastMessage.createdAt)}
+                                  </span>
+                                </span>
+
+                                {unreadCount > 0 && (
+                                  <span style={{
+                                    background: '#0084FF', color: 'white',
+                                    borderRadius: '50%', width: 20, height: 20,
+                                    fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                  }}>
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+
+                      {/* Matching Friends or Suggested Friends */}
+                      {(query || conversations.length === 0) && filteredFriends.length > 0 && (
                         <div>
-                          <div style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em', background: 'var(--color-bg)' }}>
-                            Friends / Start Chat ({filteredFriends.length})
+                          <div style={{
+                            padding: '12px 16px 6px', fontSize: 12, fontWeight: 700,
+                            color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                            background: 'var(--color-bg)',
+                          }}>
+                            {query ? `Suggested Contacts (${filteredFriends.length})` : 'Start a New Chat'}
                           </div>
                           {filteredFriends.map((f) => (
                             <button
@@ -424,18 +587,16 @@ function MessagesContent() {
                               }}
                               style={{
                                 width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                                padding: '10px 16px', border: 'none', borderRadius: 0,
-                                background: 'white',
+                                padding: '12px 16px', border: 'none', background: 'white',
                                 cursor: 'pointer', textAlign: 'left',
-                                borderBottom: '1px solid var(--color-border)',
                                 transition: 'background 0.15s',
                               }}
-                              onMouseOver={(e) => (e.currentTarget.style.background = 'var(--color-brand-tint)')}
+                              onMouseOver={(e) => (e.currentTarget.style.background = '#f9fafb')}
                               onMouseOut={(e) => (e.currentTarget.style.background = 'white')}
                             >
-                              <Avatar user={f} size={38} />
+                              <Avatar user={f} size={48} online={true} />
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--color-ink)' }}>
+                                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
                                   {f.name}
                                 </div>
                                 <div style={{ fontSize: 12, color: 'var(--color-ink-faint)' }}>
@@ -443,8 +604,8 @@ function MessagesContent() {
                                 </div>
                               </div>
                               <span style={{
-                                fontSize: 11.5, color: 'var(--color-brand)', fontWeight: 600,
-                                background: 'var(--color-brand-tint)', padding: '4px 8px', borderRadius: 12,
+                                fontSize: 12, color: '#0084FF', fontWeight: 700,
+                                background: '#eff6ff', padding: '5px 12px', borderRadius: 'var(--radius-pill)',
                               }}>
                                 Chat
                               </span>
@@ -452,56 +613,95 @@ function MessagesContent() {
                           ))}
                         </div>
                       )}
-                    </>
+                    </div>
                   );
                 })()
               )}
             </div>
+
+            {/* Facebook Messenger Floating Action Button (+) */}
+            <button
+              onClick={() => {
+                setShowSearchInput(true);
+                searchInputRef.current?.focus();
+              }}
+              style={{
+                position: 'fixed', bottom: 24, right: 20,
+                width: 56, height: 56, borderRadius: '50%',
+                background: '#0084FF', color: 'white',
+                border: 'none', cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(0, 132, 255, 0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 40, transition: 'transform 0.15s, background 0.15s',
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+              onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              title="New Message"
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
           </div>
 
-          {/* Thread panel */}
-          <div className="card" style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', padding: 0, minWidth: 0,
-          }}>
+          {/* Facebook Direct Chat Thread Panel (On mobile only when activePartner exists, on desktop always) */}
+          <div
+            className={`card ${!activePartner ? 'hide-on-mobile' : ''}`}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden', padding: 0, minWidth: 0,
+              background: 'white',
+            }}
+          >
             {!activePartner ? (
               <div style={{
                 flex: 1, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: 12,
+                alignItems: 'center', justifyContent: 'center', gap: 14,
                 color: 'var(--color-ink-faint)', padding: 32,
               }}>
-                <p style={{ fontSize: 15, textAlign: 'center', color: 'var(--color-ink-soft)' }}>
-                  Select a conversation from the left<br />or message a friend to start chatting.
+                <div style={{
+                  width: 72, height: 72, borderRadius: '50%', background: 'var(--color-brand-tint)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-brand)',
+                }}>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>Your Messages</p>
+                <p style={{ fontSize: 13, textAlign: 'center', color: 'var(--color-ink-soft)', maxWidth: 280 }}>
+                  Select a chat or message a friend to start a conversation.
                 </p>
-                <button
-                  className="btn-brand"
-                  onClick={() => router.push('/friends')}
-                  style={{ marginTop: 8 }}
-                >
-                  View Friends
-                </button>
               </div>
             ) : (
               <>
-                {/* Thread header */}
+                {/* Facebook Chat Header */}
                 <div style={{
-                  padding: '12px 20px', borderBottom: '1px solid var(--color-border)',
+                  padding: '10px 16px', borderBottom: '1px solid var(--color-border)',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   background: 'white', position: 'relative',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <button
                       onClick={() => setActivePartner(null)}
                       style={{
                         border: 'none', background: 'none', cursor: 'pointer',
-                        fontSize: 18, padding: '4px 8px 4px 0', color: 'var(--color-ink-soft)',
+                        color: 'var(--color-brand)', padding: '6px 4px',
+                        display: 'flex', alignItems: 'center',
                       }}
-                      className="show-on-mobile"
-                    >←</button>
-                    <Avatar user={activePartner} size={38} />
+                      title="Back to conversation list"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </button>
+                    <Avatar user={activePartner} size={40} online={true} />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-ink)' }}>{activePartner.name}</div>
-                      <div style={{ fontSize: 12, color: 'var(--color-ink-faint)' }}>@{activePartner.handle}</div>
+                      <div style={{ fontSize: 11.5, color: '#22c55e', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        Active now
+                      </div>
                     </div>
                   </div>
 
@@ -510,18 +710,20 @@ function MessagesContent() {
                     <button
                       onClick={() => setShowBlockMenu(v => !v)}
                       style={{
-                        border: '1px solid var(--color-border)', background: 'transparent',
-                        padding: '6px 12px', borderRadius: 'var(--radius-sm)',
-                        fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                        color: 'var(--color-ink-soft)',
+                        width: 36, height: 36, borderRadius: '50%',
+                        border: 'none', background: 'var(--color-bg)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'var(--color-ink)', cursor: 'pointer',
                       }}
                     >
-                      Options
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+                      </svg>
                     </button>
 
                     {showBlockMenu && (
                       <div style={{
-                        position: 'absolute', right: 0, top: 38, width: 210,
+                        position: 'absolute', right: 0, top: 42, width: 210,
                         background: 'white', borderRadius: 'var(--radius-sm)',
                         boxShadow: 'var(--shadow-md)', border: '1px solid var(--color-border)',
                         zIndex: 50, padding: 6,
@@ -529,8 +731,8 @@ function MessagesContent() {
                         <button
                           onClick={() => { setShowBlockMenu(false); router.push(`/profile?handle=${activePartner.handle}`); }}
                           style={{
-                            width: '100%', padding: '8px 12px', border: 'none', background: 'none',
-                            textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 4,
+                            width: '100%', padding: '9px 12px', border: 'none', background: 'none',
+                            textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 6,
                             display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-ink)',
                           }}
                         >
@@ -542,8 +744,8 @@ function MessagesContent() {
                             onClick={handleUnblock}
                             disabled={actionLoading}
                             style={{
-                              width: '100%', padding: '8px 12px', border: 'none', background: 'none',
-                              textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 4,
+                              width: '100%', padding: '9px 12px', border: 'none', background: 'none',
+                              textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 6,
                               display: 'flex', alignItems: 'center', gap: 8, color: '#16a34a', fontWeight: 600,
                             }}
                           >
@@ -555,8 +757,8 @@ function MessagesContent() {
                               onClick={() => handleBlock('MESSAGE')}
                               disabled={actionLoading}
                               style={{
-                                width: '100%', padding: '8px 12px', border: 'none', background: 'none',
-                                textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 4,
+                                width: '100%', padding: '9px 12px', border: 'none', background: 'none',
+                                textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 6,
                                 display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626',
                               }}
                             >
@@ -566,8 +768,8 @@ function MessagesContent() {
                               onClick={() => handleBlock('ALL')}
                               disabled={actionLoading}
                               style={{
-                                width: '100%', padding: '8px 12px', border: 'none', background: 'none',
-                                textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 4,
+                                width: '100%', padding: '9px 12px', border: 'none', background: 'none',
+                                textAlign: 'left', fontSize: 13, cursor: 'pointer', borderRadius: 6,
                                 display: 'flex', alignItems: 'center', gap: 8, color: '#991b1b', fontWeight: 600,
                               }}
                             >
@@ -583,7 +785,7 @@ function MessagesContent() {
                 {/* Status Alert Banners */}
                 {partnerStatus?.requestStatus === 'PENDING_RECEIVED' && (
                   <div style={{
-                    padding: '12px 20px', background: '#ecfdf5', borderBottom: '1px solid #a7f3d0',
+                    padding: '12px 16px', background: '#ecfdf5', borderBottom: '1px solid #a7f3d0',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
                   }}>
                     <div style={{ fontSize: 13, color: '#065f46', fontWeight: 600 }}>
@@ -614,7 +816,7 @@ function MessagesContent() {
 
                 {partnerStatus?.requestStatus === 'PENDING_SENT' && !partnerStatus?.isFriends && (
                   <div style={{
-                    padding: '10px 20px', background: '#eff6ff', borderBottom: '1px solid #bfdbfe',
+                    padding: '10px 16px', background: '#eff6ff', borderBottom: '1px solid #bfdbfe',
                     fontSize: 13, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8,
                   }}>
                     Message request sent. You can chat freely once they accept.
@@ -623,7 +825,7 @@ function MessagesContent() {
 
                 {partnerStatus?.requestStatus === 'DECLINED' && (
                   <div style={{
-                    padding: '10px 20px', background: '#fef2f2', borderBottom: '1px solid #fecaca',
+                    padding: '10px 16px', background: '#fef2f2', borderBottom: '1px solid #fecaca',
                     fontSize: 13, color: '#991b1b', display: 'flex', alignItems: 'center', gap: 8,
                   }}>
                     This user declined your message request.
@@ -632,7 +834,7 @@ function MessagesContent() {
 
                 {partnerStatus?.isBlockedByMe && (
                   <div style={{
-                    padding: '10px 20px', background: '#fff1f2', borderBottom: '1px solid #fecdd3',
+                    padding: '10px 16px', background: '#fff1f2', borderBottom: '1px solid #fecdd3',
                     fontSize: 13, color: '#be123c', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   }}>
                     <span>You have blocked this user.</span>
@@ -650,59 +852,64 @@ function MessagesContent() {
 
                 {partnerStatus?.hasBlockedMe && (
                   <div style={{
-                    padding: '10px 20px', background: '#fef2f2', borderBottom: '1px solid #fecaca',
+                    padding: '10px 16px', background: '#fef2f2', borderBottom: '1px solid #fecaca',
                     fontSize: 13, color: '#991b1b',
                   }}>
                     This user has blocked you. Messages cannot be delivered.
                   </div>
                 )}
 
-                {partnerStatus?.isDeclinedBlocked && !partnerStatus?.isFriends && (
-                  <div style={{
-                    padding: '10px 20px', background: '#fffbeb', borderBottom: '1px solid #fde68a',
-                    fontSize: 13, color: '#92400e',
-                  }}>
-                    Non-friend message requests are temporarily restricted.
-                  </div>
-                )}
-
-                {/* Messages */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* Facebook Style Chat Bubble Messages Area */}
+                <div style={{
+                  flex: 1, overflowY: 'auto', padding: '16px',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                  background: '#F0F2F5',
+                }}>
                   {loadingThread ? (
-                    <div style={{ textAlign: 'center', color: 'var(--color-ink-faint)', fontSize: 14, marginTop: 40 }}>Loading thread…</div>
+                    <div style={{ textAlign: 'center', color: 'var(--color-ink-faint)', fontSize: 14, marginTop: 40 }}>
+                      Loading messages…
+                    </div>
                   ) : messages.length === 0 ? (
-                    <div style={{ textAlign: 'center', marginTop: 40 }}>
-                      <p style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>
+                    <div style={{
+                      textAlign: 'center', marginTop: 40, padding: 24,
+                      background: 'white', borderRadius: 16, margin: '20px auto', maxWidth: 300,
+                    }}>
+                      <Avatar user={activePartner} size={64} online={true} />
+                      <div style={{ fontWeight: 700, fontSize: 16, marginTop: 10, color: 'var(--color-ink)' }}>{activePartner.name}</div>
+                      <p style={{ fontSize: 12.5, color: 'var(--color-ink-soft)', marginTop: 4 }}>
                         {!partnerStatus?.isFriends
-                          ? `Send an introduction or request message to ${activePartner.name}`
-                          : `Start a conversation with ${activePartner.name}`}
+                          ? `Send a message to start chatting with ${activePartner.name}`
+                          : `You're connected on Study Partner`}
                       </p>
                     </div>
                   ) : (
                     messages.map((msg) => {
                       const isOwn = msg.sender.id === user.id;
                       return (
-                        <div key={msg.id} style={{
-                          display: 'flex',
-                          flexDirection: isOwn ? 'row-reverse' : 'row',
-                          alignItems: 'flex-end', gap: 8,
-                        }}>
-                          {!isOwn && <Avatar user={msg.sender} size={28} />}
+                        <div
+                          key={msg.id}
+                          style={{
+                            display: 'flex',
+                            flexDirection: isOwn ? 'row-reverse' : 'row',
+                            alignItems: 'flex-end', gap: 8,
+                          }}
+                        >
+                          {!isOwn && <Avatar user={msg.sender} size={28} online={false} />}
                           <div style={{
-                            maxWidth: '68%',
+                            maxWidth: '72%',
                             padding: '10px 14px',
                             borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                            background: isOwn ? 'var(--color-brand)' : 'var(--color-bg)',
+                            background: isOwn ? '#0084FF' : 'white',
                             color: isOwn ? 'white' : 'var(--color-ink)',
-                            fontSize: 14, lineHeight: 1.5,
+                            fontSize: 14.5, lineHeight: 1.45,
                             wordBreak: 'break-word',
-                            boxShadow: 'var(--shadow-sm)',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
                           }}>
                             {msg.text}
                             <div style={{
                               fontSize: 10,
-                              color: isOwn ? 'rgba(255,255,255,0.65)' : 'var(--color-ink-faint)',
-                              marginTop: 4, textAlign: 'right',
+                              color: isOwn ? 'rgba(255,255,255,0.7)' : 'var(--color-ink-faint)',
+                              marginTop: 3, textAlign: 'right',
                             }}>
                               {timeAgo(msg.createdAt)}
                             </div>
@@ -714,13 +921,16 @@ function MessagesContent() {
                   <div ref={bottomRef} />
                 </div>
 
-                {/* Input */}
-                <form onSubmit={sendMessage} style={{
-                  padding: '12px 16px',
-                  borderTop: '1px solid var(--color-border)',
-                  display: 'flex', gap: 10, alignItems: 'center',
-                  background: isInputDisabled ? '#f9fafb' : 'white',
-                }}>
+                {/* Facebook Messenger Input Bar */}
+                <form
+                  onSubmit={sendMessage}
+                  style={{
+                    padding: '10px 14px',
+                    borderTop: '1px solid var(--color-border)',
+                    display: 'flex', gap: 8, alignItems: 'center',
+                    background: isInputDisabled ? '#f9fafb' : 'white',
+                  }}
+                >
                   <input
                     className="input"
                     placeholder={
@@ -729,22 +939,36 @@ function MessagesContent() {
                         : partnerStatus?.hasBlockedMe
                         ? 'Unable to send messages…'
                         : partnerStatus?.requestStatus === 'PENDING_SENT' && !partnerStatus?.isFriends
-                        ? 'Message request already pending…'
-                        : `Message ${activePartner.name}…`
+                        ? 'Message request pending…'
+                        : 'Aa'
                     }
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    style={{ flex: 1, margin: 0 }}
+                    style={{
+                      flex: 1, margin: 0,
+                      borderRadius: 'var(--radius-pill)',
+                      padding: '10px 16px',
+                      fontSize: 14.5,
+                      background: 'var(--color-bg)',
+                      border: '1px solid var(--color-border)',
+                    }}
                     autoFocus={!isInputDisabled}
                     disabled={isInputDisabled}
                   />
                   <button
                     type="submit"
-                    className="btn-brand"
                     disabled={!text.trim() || isInputDisabled}
-                    style={{ flexShrink: 0, padding: '10px 18px', opacity: isInputDisabled ? 0.5 : 1 }}
+                    style={{
+                      width: 40, height: 40, borderRadius: '50%',
+                      background: text.trim() && !isInputDisabled ? '#0084FF' : '#e2e8f0',
+                      color: 'white', border: 'none', cursor: text.trim() && !isInputDisabled ? 'pointer' : 'default',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, transition: 'background 0.15s',
+                    }}
                   >
-                    {sending ? '…' : 'Send'}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
                   </button>
                 </form>
               </>
@@ -752,7 +976,6 @@ function MessagesContent() {
           </div>
         </main>
       </div>
-      <MobileBottomNav />
     </div>
   );
 }
