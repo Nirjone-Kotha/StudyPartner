@@ -322,23 +322,24 @@ function GroupComposer({
           style={{ fontSize: 13 }}
         />
 
+        {/* Post Destination Selection */}
         <div style={{
           background: 'var(--color-surface-2)',
-          padding: '12px 14px',
+          padding: '10px 12px',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--color-border)',
           marginTop: 2,
           display: 'flex', flexDirection: 'column', gap: 8,
         }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Post Destination (কোথায় পোস্ট হবে)
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Post Destination
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => setShareToFeed(false)}
               style={{
-                flex: 1, minWidth: 140, padding: '8px 12px',
+                flex: 1, minWidth: 130, padding: '8px 12px',
                 borderRadius: 'var(--radius-pill)',
                 border: !shareToFeed ? '1.5px solid var(--color-brand)' : '1px solid var(--color-border)',
                 background: !shareToFeed ? 'var(--color-brand-tint)' : 'white',
@@ -355,7 +356,7 @@ function GroupComposer({
               type="button"
               onClick={() => setShareToFeed(true)}
               style={{
-                flex: 1, minWidth: 140, padding: '8px 12px',
+                flex: 1, minWidth: 130, padding: '8px 12px',
                 borderRadius: 'var(--radius-pill)',
                 border: shareToFeed ? '1.5px solid var(--color-brand)' : '1px solid var(--color-border)',
                 background: shareToFeed ? 'var(--color-brand-tint)' : 'white',
@@ -369,11 +370,6 @@ function GroupComposer({
               <span>🌐 Group & Main Feed</span>
             </button>
           </div>
-          <p style={{ fontSize: 11.5, color: 'var(--color-ink-soft)', margin: 0, lineHeight: 1.4 }}>
-            {shareToFeed
-              ? '✨ এই পোস্টটি গ্রুপের পাশাপাশি সবার জেনারেল হোম ফিডে যাবে এবং গ্রুপের নাম ও জয়েন বাটন থাকবে।'
-              : '🔒 এই পোস্টটি শুধুমাত্র এই গ্রুপের অভ্যন্তরীণ ফিডে থাকবে (জেনারেল হোম ফিডে যাবে না)।'}
-          </p>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
