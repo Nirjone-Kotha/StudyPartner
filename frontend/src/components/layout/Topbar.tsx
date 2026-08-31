@@ -444,14 +444,13 @@ export function Topbar() {
       if (countRes?.data) {
         const serverCount = countRes.data.count || 0;
         if (serverCount > 0) {
-          // New notifications arrived — always show
+          if (!userClearedRef.current) {
+            setUnreadNotifications(serverCount);
+          }
+        } else {
           userClearedRef.current = false;
-          setUnreadNotifications(serverCount);
-        } else if (!userClearedRef.current) {
-          // Server says 0 and user didn't manually clear — safe to update
           setUnreadNotifications(0);
         }
-        // If userClearedRef.current is true and serverCount is 0, keep showing 0 (already cleared)
       }
     } catch { /* silent */ }
   }, [user]);
@@ -466,11 +465,19 @@ export function Topbar() {
     setShowNotifications(v => {
       const next = !v;
       if (next) {
-        // Only refresh the notification LIST, not the unread count
-        // (to avoid overriding optimistic badge clear on re-open)
+        // Instantly clear unread badge in UI & on backend when opened/seen
+        userClearedRef.current = true;
+        setUnreadNotifications(0);
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        api.post('/notifications/read-all').catch(() => {});
+
         setNotificationsLoading(true);
         api.get<NotificationItem[]>('/notifications')
-          .then(res => { if (res?.data) setNotifications(res.data); })
+          .then(res => {
+            if (res?.data) {
+              setNotifications(res.data.map(n => ({ ...n, read: true })));
+            }
+          })
           .catch(() => {})
           .finally(() => setNotificationsLoading(false));
       }
@@ -491,18 +498,12 @@ export function Topbar() {
 
   const handleNotificationClick = async (notif: NotificationItem) => {
     setShowNotifications(false);
-    if (!notif.read) {
-      // Optimistic update — remove badge immediately
-      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
-      setUnreadNotifications(c => {
-        const next = Math.max(0, c - 1);
-        if (next === 0) userClearedRef.current = true;
-        return next;
-      });
-      try {
-        await api.post(`/notifications/${notif.id}/read`);
-      } catch { /* silent */ }
-    }
+    userClearedRef.current = true;
+    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+    setUnreadNotifications(c => Math.max(0, c - 1));
+    try {
+      await api.post(`/notifications/${notif.id}/read`);
+    } catch { /* silent */ }
     if (notif.targetUrl) {
       router.push(notif.targetUrl);
     } else if (notif.actor) {
