@@ -416,12 +416,26 @@ button, nav, header, .badge, .avatar, [role="button"], .tab-btn {
   body {
     overscroll-behavior-y: contain;
     touch-action: pan-y;
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
   }
 
   /* Safe Area support for Android display cutouts */
   .topbar {
     padding-top: max(env(safe-area-inset-top, 0px), 0px);
+  }
+
+  /* Messages Mobile Full-Height Edge-to-Edge */
+  .messages-container {
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+  .messages-main {
+    height: calc(100dvh - 105px) !important;
+    gap: 0 !important;
+  }
+  .messages-card {
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }
 

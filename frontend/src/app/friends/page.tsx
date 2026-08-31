@@ -240,18 +240,24 @@ export default function FriendsPage() {
             <p style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>Connect with your study partners</p>
           </div>
 
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20, background: 'white', padding: 6, borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+          <div style={{
+            display: 'flex', gap: 6, marginBottom: 20, background: 'white', padding: 6,
+            borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)',
+            overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+          }}>
             {TABS.map(t => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 style={{
-                  flex: 1, padding: '10px 12px', border: 'none', borderRadius: 'var(--radius-sm)',
+                  flex: 1, minWidth: 'fit-content', whiteSpace: 'nowrap',
+                  padding: '9px 14px', border: 'none', borderRadius: 'var(--radius-sm)',
                   background: tab === t.key ? 'var(--color-brand)' : 'transparent',
                   color: tab === t.key ? 'white' : 'var(--color-ink-soft)',
-                  fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   transition: 'all 0.15s',
+                  flexShrink: 0,
                 }}
               >
                 {t.label}

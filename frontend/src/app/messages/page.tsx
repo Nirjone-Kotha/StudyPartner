@@ -340,23 +340,29 @@ function MessagesContent() {
       <Toaster position="top-center" />
       <Topbar />
 
-      <div style={{
-        maxWidth: 1100, margin: '0 auto', padding: '10px 16px 16px',
-        display: 'flex', gap: 16,
-      }}>
+      <div
+        className="messages-container"
+        style={{
+          maxWidth: 1100, margin: '0 auto',
+          display: 'flex', gap: 16,
+        }}
+      >
         {/* Left sidebar only on desktop */}
         <div className="hide-on-mobile" style={{ width: 240, flexShrink: 0 }}>
           <LeftNav />
         </div>
 
         {/* Messages layout */}
-        <main style={{
-          flex: 1, display: 'flex', gap: 16, minWidth: 0,
-          height: 'calc(100vh - 84px)',
-        }}>
+        <main
+          className="messages-main"
+          style={{
+            flex: 1, display: 'flex', gap: 16, minWidth: 0,
+            height: 'calc(100vh - 84px)',
+          }}
+        >
           {/* Conversation List Panel (Always on desktop, on mobile only when no active thread) */}
           <div
-            className={`card ${activePartner ? 'hide-on-mobile' : ''}`}
+            className={`card messages-card ${activePartner ? 'hide-on-mobile' : ''}`}
             style={{
               width: 340, flexShrink: 0,
               display: 'flex',
@@ -664,7 +670,7 @@ function MessagesContent() {
 
           {/* Facebook Direct Chat Thread Panel (On mobile only when activePartner exists, on desktop always) */}
           <div
-            className={`card ${!activePartner ? 'hide-on-mobile' : ''}`}
+            className={`card messages-card ${!activePartner ? 'hide-on-mobile' : ''}`}
             style={{
               flex: 1,
               display: 'flex',
