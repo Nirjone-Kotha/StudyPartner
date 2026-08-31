@@ -570,7 +570,7 @@ function containsLink(text?: string): boolean {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           borderBottom: '1px solid var(--color-border)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {/* Overlapping top active reaction emoji icons */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {REACTIONS.filter(r => (post.reactionCounts?.[r.type] ?? 0) > 0).map((r, idx) => (
@@ -578,9 +578,9 @@ function containsLink(text?: string): boolean {
                   key={r.type}
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 22, height: 22, borderRadius: '50%',
-                    background: 'white', fontSize: 13,
-                    marginLeft: idx === 0 ? 0 : -5,
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: 'white', fontSize: 12,
+                    marginLeft: idx === 0 ? 0 : -4,
                     border: '1.5px solid white',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
                     zIndex: 10 - idx,
@@ -592,22 +592,10 @@ function containsLink(text?: string): boolean {
               ))}
             </div>
 
-            {/* Breakdown of each reacted emoji count (zero is excluded) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 2 }}>
-              {REACTIONS.filter(r => (post.reactionCounts?.[r.type] ?? 0) > 0).map(r => (
-                <span
-                  key={r.type}
-                  style={{
-                    fontSize: 12.5, fontWeight: 600,
-                    color: 'var(--color-ink-soft)',
-                    display: 'inline-flex', alignItems: 'center', gap: 3,
-                  }}
-                >
-                  <span>{r.emoji}</span>
-                  <span>{post.reactionCounts?.[r.type]}</span>
-                </span>
-              ))}
-            </div>
+            {/* Total count */}
+            <span style={{ fontSize: 13, color: 'var(--color-ink-soft)', fontWeight: 500, marginLeft: 2 }}>
+              {post._count.reactions}
+            </span>
           </div>
 
           {post._count.comments > 0 && (
