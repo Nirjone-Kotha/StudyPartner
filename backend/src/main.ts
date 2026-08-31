@@ -6,26 +6,24 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Full CORS configuration for Vercel, mobile PWA, localhost, and cross-origin preflight requests
+  // Raw Express CORS middleware for 100% guarantee on preflights, all routes, and error responses
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.use((req: any, res: any, next: any) => {
+    const origin = req.headers.origin || '*';
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, X-Requested-With, Origin, Cache-Control');
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    next();
+  });
+
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow any origin (including Vercel domains, localhost, mobile webviews, curl, etc.)
-      callback(null, true);
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
-    allowedHeaders: [
-      'Origin',
-      'X-Requested-With',
-      'Content-Type',
-      'Accept',
-      'Authorization',
-      'Cache-Control',
-      'X-Custom-Header',
-    ],
-    exposedHeaders: ['Authorization'],
+    origin: true,
     credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
   });
 
   app.useGlobalPipes(
