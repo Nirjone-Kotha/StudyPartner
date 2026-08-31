@@ -6,29 +6,29 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#6C4CFA',
-          dark: '#5636E0',
-          tint: '#EFEAFE',
+          DEFAULT: '#5B4DFF',
+          dark: '#493BDE',
+          tint: '#EEF0FF',
         },
         accent: {
-          DEFAULT: '#FF6B4A',
-          tint: '#FFE7E0',
+          DEFAULT: '#FF5E3A',
+          tint: '#FFF1EE',
         },
         gold: {
-          DEFAULT: '#FFC93C',
-          tint: '#FFF6DC',
+          DEFAULT: '#F59E0B',
+          tint: '#FEF3C7',
         },
         ink: {
-          DEFAULT: '#1C1830',
-          soft: '#6E698A',
-          faint: '#A7A2C0',
+          DEFAULT: '#111827',
+          soft: '#4B5563',
+          faint: '#9CA3AF',
         },
         surface: {
           DEFAULT: '#FFFFFF',
-          2: '#FBF9FF',
+          2: '#F8F9FA',
         },
-        bg: '#F5F3FC',
-        border: '#E8E4F7',
+        bg: '#F6F7F9',
+        border: '#E5E7EB',
       },
       fontFamily: {
         display: ['Fredoka', 'system-ui', 'sans-serif'],
@@ -42,10 +42,10 @@ const config: Config = {
         pill: '999px',
       },
       boxShadow: {
-        sm: '0 1px 3px rgba(28,24,48,0.06), 0 1px 2px rgba(28,24,48,0.04)',
-        md: '0 8px 24px rgba(28,24,48,0.08)',
-        lg: '0 16px 40px rgba(28,24,48,0.14)',
-        brand: '0 4px 14px rgba(108,76,250,0.35)',
+        sm: '0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03)',
+        md: '0 6px 20px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04)',
+        lg: '0 12px 32px rgba(15, 23, 42, 0.1)',
+        brand: '0 4px 14px rgba(91, 77, 255, 0.28)',
       },
     },
   },

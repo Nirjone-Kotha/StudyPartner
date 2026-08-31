@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --color-brand: #6C4CFA;
-  --color-brand-dark: #5636E0;
-  --color-brand-tint: #EFEAFE;
-  --color-accent: #FF6B4A;
-  --color-accent-tint: #FFE7E0;
-  --color-gold: #FFC93C;
-  --color-gold-tint: #FFF6DC;
-  --color-ink: #1C1830;
-  --color-ink-soft: #6E698A;
-  --color-ink-faint: #A7A2C0;
+  --color-brand: #5B4DFF;
+  --color-brand-dark: #493BDE;
+  --color-brand-tint: #EEF0FF;
+  --color-accent: #FF5E3A;
+  --color-accent-tint: #FFF1EE;
+  --color-gold: #F59E0B;
+  --color-gold-tint: #FEF3C7;
+  --color-ink: #111827;
+  --color-ink-soft: #4B5563;
+  --color-ink-faint: #9CA3AF;
   --color-surface: #FFFFFF;
-  --color-surface-2: #FBF9FF;
-  --color-bg: #F5F3FC;
-  --color-border: #E8E4F7;
+  --color-surface-2: #F8F9FA;
+  --color-bg: #F6F7F9;
+  --color-border: #E5E7EB;
 
   --font-display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -25,27 +25,27 @@
   --radius-lg: 24px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 3px rgba(28,24,48,0.06), 0 1px 2px rgba(28,24,48,0.04);
-  --shadow-md: 0 8px 24px rgba(28,24,48,0.08);
-  --shadow-lg: 0 16px 40px rgba(28,24,48,0.14);
-  --shadow-brand: 0 4px 14px rgba(108,76,250,0.35);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.1);
+  --shadow-brand: 0 4px 14px rgba(91, 77, 255, 0.28);
 }
 
 @theme {
-  --color-brand: #6C4CFA;
-  --color-brand-dark: #5636E0;
-  --color-brand-tint: #EFEAFE;
-  --color-accent: #FF6B4A;
-  --color-accent-tint: #FFE7E0;
-  --color-gold: #FFC93C;
-  --color-gold-tint: #FFF6DC;
-  --color-ink: #1C1830;
-  --color-ink-soft: #6E698A;
-  --color-ink-faint: #A7A2C0;
+  --color-brand: #5B4DFF;
+  --color-brand-dark: #493BDE;
+  --color-brand-tint: #EEF0FF;
+  --color-accent: #FF5E3A;
+  --color-accent-tint: #FFF1EE;
+  --color-gold: #F59E0B;
+  --color-gold-tint: #FEF3C7;
+  --color-ink: #111827;
+  --color-ink-soft: #4B5563;
+  --color-ink-faint: #9CA3AF;
   --color-surface: #FFFFFF;
-  --color-surface-2: #FBF9FF;
-  --color-bg: #F5F3FC;
-  --color-border: #E8E4F7;
+  --color-surface-2: #F8F9FA;
+  --color-bg: #F6F7F9;
+  --color-border: #E5E7EB;
 
   --font-display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -56,10 +56,10 @@
   --radius-lg: 24px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 3px rgba(28,24,48,0.06), 0 1px 2px rgba(28,24,48,0.04);
-  --shadow-md: 0 8px 24px rgba(28,24,48,0.08);
-  --shadow-lg: 0 16px 40px rgba(28,24,48,0.14);
-  --shadow-brand: 0 4px 14px rgba(108,76,250,0.35);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.1);
+  --shadow-brand: 0 4px 14px rgba(91, 77, 255, 0.28);
 }
 
 * {
