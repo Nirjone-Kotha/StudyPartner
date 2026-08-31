@@ -72,6 +72,15 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
 
   useEffect(() => { setMounted(true); }, []);
 
+  // Track mobile vs desktop via JS (more reliable than CSS-only approach with portals)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -148,8 +157,8 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
       {/* ══════════════════════════════════════════════════════════
           MOBILE / PWA VIEW (Matching Facebook Mobile App Image)
          ══════════════════════════════════════════════════════════ */}
+      {isMobile && (
       <div
-        className="flex md:hidden flex-col"
         style={{
           position: 'fixed', inset: 0,
           background: bgColor,
@@ -474,11 +483,13 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
           </div>
         )}
       </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════
           DESKTOP VIEW (Facebook Story Studio with Left Panel & Dark Theater)
          ══════════════════════════════════════════════════════════ */}
-      <div className="hidden md:flex flex-col flex-1" style={{ overflow: 'hidden' }}>
+      {!isMobile && (
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         {/* ─── Facebook Story Topbar ─── */}
         <header style={{
           height: 56, background: 'white',
@@ -874,6 +885,7 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
           </div>
         </div>
       </div>
+      )}
     </div>,
     document.body
   );
