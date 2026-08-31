@@ -109,11 +109,6 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { handle } });
     if (!user) throw new NotFoundException('User not found');
 
-    // If profile is private and requester is not the owner, return empty
-    if (!user.isPublic && user.id !== userId) {
-      return [];
-    }
-
     return this.prisma.post.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },

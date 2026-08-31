@@ -555,7 +555,8 @@ function ProfileContent() {
   const images = posts.filter(p => p.mediaUrl && p.mediaType === 'IMAGE').slice(0, 9);
   const joinedDate = new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const isPublic = profile.isPublic !== false;
-  const isPrivateAndNotMe = !isPublic && !isMe;
+  const isFriend = friendStatus.status === 'FRIENDS';
+  const isPrivateAndNotFriend = !isPublic && !isMe && !isFriend;
 
   return (
     <>
@@ -714,19 +715,32 @@ function ProfileContent() {
             </h1>
             <p style={{ fontSize: 14, color: 'var(--color-ink-soft)', marginBottom: 10 }}>@{profile.handle}</p>
 
-            {profile.bio && (
-              <p style={{ fontSize: 15, color: 'var(--color-ink)', marginBottom: 14, lineHeight: 1.6 }}>{profile.bio}</p>
-            )}
+            {isPrivateAndNotFriend ? (
+              <div style={{
+                margin: '10px 0 14px', padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+                background: '#fff8e1', border: '1px solid #ffe082', color: '#b45309',
+                fontSize: 13, display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <span style={{ fontSize: 16 }}>🔒</span>
+                <span>This profile is private. Bio and personal details are only visible to friends.</span>
+              </div>
+            ) : (
+              <>
+                {profile.bio && (
+                  <p style={{ fontSize: 15, color: 'var(--color-ink)', marginBottom: 14, lineHeight: 1.6 }}>{profile.bio}</p>
+                )}
 
-            {/* Intro details */}
-            <div style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {profile.institution && <div>🏫 {profile.institution}</div>}
-              {profile.location
-                ? <div>📍 Lives in {profile.location}</div>
-                : <div>📍 Lives in Sylhet, Bangladesh</div>
-              }
-              <div>📅 Joined {joinedDate}</div>
-            </div>
+                {/* Intro details */}
+                <div style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {profile.institution && <div>🏫 {profile.institution}</div>}
+                  {profile.location
+                    ? <div>📍 Lives in {profile.location}</div>
+                    : <div>📍 Lives in Sylhet, Bangladesh</div>
+                  }
+                  <div>📅 Joined {joinedDate}</div>
+                </div>
+              </>
+            )}
 
             {/* Stats */}
             <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
@@ -736,17 +750,22 @@ function ProfileContent() {
               </div>
 
               <div
-                onClick={() => setShowFriendsModal(true)}
+                onClick={() => { if (!isPrivateAndNotFriend) setShowFriendsModal(true); }}
                 style={{
-                  cursor: 'pointer', padding: '4px 8px', borderRadius: 'var(--radius-sm)',
+                  cursor: isPrivateAndNotFriend ? 'default' : 'pointer',
+                  padding: '4px 8px', borderRadius: 'var(--radius-sm)',
                   marginLeft: -8, transition: 'background 0.15s',
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.background = 'var(--color-brand-tint)')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
-                title="Click to view all friends"
+                onMouseOver={(e) => { if (!isPrivateAndNotFriend) e.currentTarget.style.background = 'var(--color-brand-tint)'; }}
+                onMouseOut={(e) => { if (!isPrivateAndNotFriend) e.currentTarget.style.background = 'transparent'; }}
+                title={isPrivateAndNotFriend ? 'Friends list is private' : 'Click to view all friends'}
               >
-                <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-ink)' }}>{profile.friends}</span>
-                <span style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginLeft: 4, textDecoration: 'underline', textUnderlineOffset: 3 }}>Friends</span>
+                <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-ink)' }}>
+                  {isPrivateAndNotFriend ? '🔒' : profile.friends}
+                </span>
+                <span style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginLeft: 4, textDecoration: isPrivateAndNotFriend ? 'none' : 'underline', textUnderlineOffset: 3 }}>
+                  Friends
+                </span>
               </div>
 
               <div>
@@ -760,76 +779,79 @@ function ProfileContent() {
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           {/* Left column: intro card + photos */}
           <div style={{ width: 220, flexShrink: 0 }}>
-            {/* Intro card */}
-            <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-              <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-soft)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Intro
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--color-ink-soft)' }}>
-                {profile.institution && <div>🏫 {profile.institution}</div>}
-                {profile.location
-                  ? <div>📍 {profile.location}</div>
-                  : <div>📍 Sylhet, Bangladesh</div>
-                }
-                <div>📅 Joined {joinedDate}</div>
-                <div>{isPublic ? '🌐 Public' : '🔒 Private'}</div>
-              </div>
-              {isMe && (
-                <button
-                  className="btn-ghost"
-                  style={{ width: '100%', marginTop: 12, fontSize: 13 }}
-                  onClick={() => setShowEditModal(true)}
-                >
-                  ✏️ Edit Details
-                </button>
-              )}
-            </div>
-
-            {/* Photos grid */}
-            {images.length > 0 && !isPrivateAndNotMe && (
-              <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-                <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-soft)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Photos
+            {isPrivateAndNotFriend ? (
+              <div className="card" style={{ padding: 16, marginBottom: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 24, marginBottom: 6 }}>🔒</div>
+                <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>
+                  Private Profile
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
-                  {images.map((p) => (
-                    <div key={p.id} style={{ aspectRatio: '1', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--color-bg)' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={p.mediaUrl!}
-                        alt="photo"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
+                <p style={{ fontSize: 12, color: 'var(--color-ink-soft)', margin: 0, lineHeight: 1.4 }}>
+                  Only friends can view {profile.name}&apos;s profile details.
+                </p>
               </div>
+            ) : (
+              <>
+                {/* Intro card */}
+                <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-soft)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Intro
+                  </h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--color-ink-soft)' }}>
+                    {profile.institution && <div>🏫 {profile.institution}</div>}
+                    {profile.location
+                      ? <div>📍 {profile.location}</div>
+                      : <div>📍 Sylhet, Bangladesh</div>
+                    }
+                    <div>📅 Joined {joinedDate}</div>
+                    <div>{isPublic ? '🌐 Public' : '🔒 Private'}</div>
+                  </div>
+                  {isMe && (
+                    <button
+                      className="btn-ghost"
+                      style={{ width: '100%', marginTop: 12, fontSize: 13 }}
+                      onClick={() => setShowEditModal(true)}
+                    >
+                      ✏️ Edit Details
+                    </button>
+                  )}
+                </div>
+
+                {/* Photos grid */}
+                {images.length > 0 && (
+                  <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+                    <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink-soft)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Photos
+                    </h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
+                      {images.map((p) => (
+                        <div key={p.id} style={{ aspectRatio: '1', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--color-bg)' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={p.mediaUrl!}
+                            alt="photo"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            loading="lazy"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
-          {/* Right column: composer (own profile only) + posts */}
+          {/* Right column: composer (own profile only) + posts (visible to everyone) */}
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {isMe && <Composer onPost={handleNewPost} />}
 
-            {/* Private profile notice */}
-            {isPrivateAndNotMe && (
-              <div className="card" style={{ padding: 40, textAlign: 'center' }}>
-                <p style={{ fontSize: 36, marginBottom: 12 }}>🔒</p>
-                <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--color-ink)', marginBottom: 6 }}>This account is private</p>
-                <p style={{ color: 'var(--color-ink-soft)', fontSize: 14 }}>
-                  Follow this account to see their posts.
-                </p>
-              </div>
-            )}
-
-            {!isPrivateAndNotMe && posts.length === 0 && (
+            {posts.length === 0 && (
               <div className="card" style={{ padding: 40, textAlign: 'center' }}>
                 <p style={{ fontSize: 28, marginBottom: 8 }}>🗒️</p>
-                <p style={{ color: 'var(--color-ink-soft)' }}>No posts yet — share your first update!</p>
+                <p style={{ color: 'var(--color-ink-soft)' }}>No posts yet</p>
               </div>
             )}
-            {!isPrivateAndNotMe && posts.map((post) => (
+            {posts.map((post) => (
               <PostCard key={post.id} post={post} onDelete={handleDelete} />
             ))}
           </div>

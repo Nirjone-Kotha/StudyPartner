@@ -44,8 +44,8 @@ export class UsersController {
 
   @Get(':handle')
   @ApiOperation({ summary: 'Get user profile by handle' })
-  getProfile(@Param('handle') handle: string) {
-    return this.usersService.getProfile(handle);
+  getProfile(@Param('handle') handle: string, @Request() req) {
+    return this.usersService.getProfile(handle, req.user?.id);
   }
 
   @Get(':handle/posts')
