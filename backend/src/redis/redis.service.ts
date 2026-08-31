@@ -9,20 +9,26 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     const redisUrl = process.env.REDIS_URL;
     if (redisUrl) {
       this.client = new Redis(redisUrl, {
-        retryStrategy: (times) => Math.min(times * 100, 3000),
-        maxRetriesPerRequest: null,
+        retryStrategy: (times) => (times > 3 ? null : Math.min(times * 200, 1000)),
+        maxRetriesPerRequest: 1,
+        enableOfflineQueue: false,
+        connectTimeout: 3000,
       });
     } else {
       this.client = new Redis({
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
         password: process.env.REDIS_PASSWORD || undefined,
-        retryStrategy: (times) => Math.min(times * 100, 3000),
-        maxRetriesPerRequest: null,
+        retryStrategy: (times) => (times > 2 ? null : 1000),
+        maxRetriesPerRequest: 1,
+        enableOfflineQueue: false,
+        connectTimeout: 2000,
       });
     }
     this.client.on('connect', () => console.log('✅ Redis connected'));
-    this.client.on('error', (err) => console.warn('Redis connection notice:', err.message));
+    this.client.on('error', () => {
+      // silent failover when Redis is not configured
+    });
   }
 
   async onModuleDestroy() {
@@ -35,7 +41,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async get(key: string): Promise<string | null> {
     try {
-      return await this.client.get(key);
+      return await this.client?.get(key);
     } catch {
       return null;
     }
@@ -44,9 +50,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
     try {
       if (ttlSeconds) {
-        await this.client.setex(key, ttlSeconds, value);
+        await this.client?.setex(key, ttlSeconds, value);
       } else {
-        await this.client.set(key, value);
+        await this.client?.set(key, value);
       }
     } catch {
       // ignore cache write error
@@ -55,7 +61,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async del(key: string): Promise<void> {
     try {
-      await this.client.del(key);
+      await this.client?.del(key);
     } catch {
       // ignore
     }
@@ -79,8 +85,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async invalidate(pattern: string): Promise<void> {
     try {
-      const keys = await this.client.keys(pattern);
-      if (keys.length) await this.client.del(...keys);
+      const keys = await this.client?.keys(pattern);
+      if (keys && keys.length) await this.client?.del(...keys);
     } catch {
       // ignore
     }
