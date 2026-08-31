@@ -241,36 +241,44 @@ export default function FriendsPage() {
           </div>
 
           <div style={{
-            display: 'flex', gap: 4, marginBottom: 20, background: 'white', padding: 4,
-            borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)',
+            display: 'flex', gap: 6, marginBottom: 20,
             width: '100%',
           }}>
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                style={{
-                  flex: 1, minWidth: 0, whiteSpace: 'nowrap',
-                  padding: '8px 4px', border: 'none', borderRadius: 'var(--radius-sm)',
-                  background: tab === t.key ? 'var(--color-brand)' : 'transparent',
-                  color: tab === t.key ? 'white' : 'var(--color-ink-soft)',
-                  fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  transition: 'all 0.15s',
-                }}
-              >
-                {t.label}
-                {t.count !== undefined && t.count > 0 && (
-                  <span style={{
-                    background: tab === t.key ? 'rgba(255,255,255,0.3)' : 'var(--color-brand)',
-                    color: 'white', borderRadius: 'var(--radius-pill)',
-                    padding: '1px 5px', fontSize: 10, fontWeight: 700,
-                  }}>
-                    {t.count}
-                  </span>
-                )}
-              </button>
-            ))}
+            {TABS.map(t => {
+              const isActive = tab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  style={{
+                    flex: 1, minWidth: 0, whiteSpace: 'nowrap',
+                    padding: '9px 4px',
+                    border: isActive ? '1px solid var(--color-brand)' : '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-pill)',
+                    background: isActive ? 'var(--color-brand)' : 'white',
+                    color: isActive ? 'white' : 'var(--color-ink)',
+                    fontWeight: isActive ? 700 : 600,
+                    fontSize: 12.5,
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    boxShadow: isActive ? '0 2px 8px rgba(91, 77, 255, 0.25)' : '0 1px 3px rgba(0,0,0,0.03)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span>{t.label}</span>
+                  {t.count !== undefined && t.count > 0 && (
+                    <span style={{
+                      background: isActive ? 'rgba(255,255,255,0.3)' : 'var(--color-brand-tint)',
+                      color: isActive ? 'white' : 'var(--color-brand)',
+                      borderRadius: 'var(--radius-pill)',
+                      padding: '1px 6px', fontSize: 10, fontWeight: 800,
+                    }}>
+                      {t.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {loading ? (
