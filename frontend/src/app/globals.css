@@ -70,6 +70,7 @@
 
 html {
   scroll-behavior: smooth;
+  height: 100%;
 }
 
 body {
@@ -77,6 +78,10 @@ body {
   background-color: var(--color-bg);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+  /* Momentum / smooth scroll on iOS Safari */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  height: 100%;
 }
 
 ::-webkit-scrollbar {
@@ -224,13 +229,30 @@ body {
 @media (display-mode: standalone) {
   body {
     padding-top: env(safe-area-inset-top, 0);
+    /* Allow full page to be scrollable inside PWA */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Every main page content area gets bottom padding so content
+     isn't hidden behind the fixed bottom nav */
+  main, [data-page], .page-main {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 68px) !important;
   }
 
   .mobile-bottom-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Smooth scroll & momentum on iOS — applied globally on mobile */
+@media (max-width: 768px) {
+  html, body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 
 /* Mobile feed layout */
 @media (max-width: 768px) {
@@ -276,7 +298,10 @@ body {
 .mobile-scroll {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
 }
+
 
 /* Mobile card improvements */
 @media (max-width: 768px) {
