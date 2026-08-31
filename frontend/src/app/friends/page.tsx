@@ -202,7 +202,7 @@ export default function FriendsPage() {
   const TABS: { key: Tab; label: string; count?: number }[] = [
     { key: 'requests', label: 'Requests', count: pending.length },
     { key: 'suggestions', label: 'Suggestions' },
-    { key: 'friends',  label: 'My Friends', count: friends.length },
+    { key: 'friends',  label: 'Friends', count: friends.length },
     { key: 'blocked',  label: 'Blocked', count: blocked.length },
   ];
 
@@ -232,32 +232,31 @@ export default function FriendsPage() {
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       <Toaster position="top-center" />
       <Topbar />
-      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'flex-start' }}>
         <div className="left-sidebar"><LeftNav /></div>
         <main style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-ink)', marginBottom: 4 }}>Friends</h1>
             <p style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>Connect with your study partners</p>
           </div>
 
           <div style={{
-            display: 'flex', gap: 6, marginBottom: 20, background: 'white', padding: 6,
+            display: 'flex', gap: 4, marginBottom: 20, background: 'white', padding: 4,
             borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)',
-            overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+            width: '100%',
           }}>
             {TABS.map(t => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 style={{
-                  flex: 1, minWidth: 'fit-content', whiteSpace: 'nowrap',
-                  padding: '9px 14px', border: 'none', borderRadius: 'var(--radius-sm)',
+                  flex: 1, minWidth: 0, whiteSpace: 'nowrap',
+                  padding: '8px 4px', border: 'none', borderRadius: 'var(--radius-sm)',
                   background: tab === t.key ? 'var(--color-brand)' : 'transparent',
                   color: tab === t.key ? 'white' : 'var(--color-ink-soft)',
-                  fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                   transition: 'all 0.15s',
-                  flexShrink: 0,
                 }}
               >
                 {t.label}
@@ -265,7 +264,7 @@ export default function FriendsPage() {
                   <span style={{
                     background: tab === t.key ? 'rgba(255,255,255,0.3)' : 'var(--color-brand)',
                     color: 'white', borderRadius: 'var(--radius-pill)',
-                    padding: '1px 8px', fontSize: 11, fontWeight: 700,
+                    padding: '1px 5px', fontSize: 10, fontWeight: 700,
                   }}>
                     {t.count}
                   </span>
