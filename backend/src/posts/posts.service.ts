@@ -35,7 +35,7 @@ export class PostsService {
         },
       },
       _count: { select: { reactions: true, comments: true } },
-      reactions: userId ? { where: { userId }, select: { type: true } } : false,
+      reactions: { select: { type: true, userId: true } },
       poll: {
         select: {
           id: true, question: true, correctAnswer: true,
@@ -46,15 +46,36 @@ export class PostsService {
     } as any;
   }
 
-  private formatPostUser(p: any) {
-    if (!p || !p.user) return p;
+  private formatPostUser(p: any, userId?: string) {
+    if (!p) return p;
+    const reactionCounts: Record<string, number> = {
+      LIKE: 0,
+      LOVE: 0,
+      HAHA: 0,
+      WOW: 0,
+      SAD: 0,
+    };
+    if (Array.isArray(p.reactions)) {
+      p.reactions.forEach((r: any) => {
+        if (reactionCounts[r.type] !== undefined) {
+          reactionCounts[r.type]++;
+        }
+      });
+    }
+
+    const myReaction = userId && Array.isArray(p.reactions)
+      ? p.reactions.find((r: any) => r.userId === userId)
+      : null;
+
     return {
       ...p,
-      user: {
+      user: p.user ? {
         ...p.user,
         followersCount: p.user._count?.followers ?? 0,
         isFollowing: Array.isArray(p.user.followers) && p.user.followers.length > 0,
-      },
+      } : p.user,
+      reactions: myReaction ? [{ type: myReaction.type }] : [],
+      reactionCounts,
     };
   }
 
@@ -93,7 +114,7 @@ export class PostsService {
       });
     }
 
-    const posts = rawPosts.map(p => this.formatPostUser(p));
+    const posts = rawPosts.map(p => this.formatPostUser(p, userId));
     const result = { posts, page, limit };
     if (page === 1 && posts.length > 0) {
       await this.redis.set(cacheKey, JSON.stringify(result), FEED_CACHE_TTL);
@@ -251,7 +272,7 @@ export class PostsService {
       select: this.postSelect(userId),
     });
     if (!post) throw new NotFoundException('Post not found');
-    return post;
+    return this.formatPostUser(post, userId);
   }
 
   async deletePost(postId: string, userId: string) {

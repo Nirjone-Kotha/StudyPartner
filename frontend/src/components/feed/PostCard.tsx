@@ -10,11 +10,11 @@ import { PollCard } from '@/components/poll/PollCard';
 import type { Post, Comment, ReactionType } from '@/types';
 
 const REACTIONS: { type: ReactionType; emoji: string; label: string; color: string }[] = [
-  { type: 'LIKE',  emoji: '👍', label: 'Like',  color: '#6C4CFA' },
-  { type: 'LOVE',  emoji: '❤️', label: 'Love',  color: '#FF6B4A' },
-  { type: 'HAHA',  emoji: '😂', label: 'Haha',  color: '#FFC93C' },
-  { type: 'WOW',   emoji: '😮', label: 'Wow',   color: '#22C55E' },
-  { type: 'SAD',   emoji: '😢', label: 'Sad',   color: '#6E698A' },
+  { type: 'LIKE',  emoji: '👍', label: 'Like',  color: '#5B4DFF' },
+  { type: 'LOVE',  emoji: '❤️', label: 'Love',  color: '#EF4444' },
+  { type: 'HAHA',  emoji: '😂', label: 'Haha',  color: '#F59E0B' },
+  { type: 'WOW',   emoji: '😮', label: 'Wow',   color: '#10B981' },
+  { type: 'SAD',   emoji: '😢', label: 'Sad',   color: '#6B7280' },
 ];
 
 interface PostCardProps {
@@ -229,7 +229,7 @@ export function PostCard({ post: initialPost, onDelete, onUpdate }: PostCardProp
   const { user } = useAuth();
   const [post, setPost] = useState<Post>(initialPost);
   const [showReactions, setShowReactions] = useState(false);
-  const [reactionHoverTimer, setReactionHoverTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showComments, setShowComments] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -269,39 +269,86 @@ export function PostCard({ post: initialPost, onDelete, onUpdate }: PostCardProp
   const isOwner = user?.id === post.user.id;
   const myReactionData = myReaction ? REACTIONS.find(r => r.type === myReaction) : null;
 
-  // Simple click = LIKE; long hover = show reaction picker
-  async function handleLikeClick() {
-    if (!showReactions) {
-      // Quick like/unlike
-      setLikeAnimating(true);
-      setTimeout(() => setLikeAnimating(false), 400);
-      try {
-        const { data } = await api.post<Post>(`/posts/${post.id}/react`, { type: myReaction ? myReaction : 'LIKE' });
-        setPost(data);
-        onUpdate?.(data);
-      } catch { toast.error('Could not react'); }
-    }
-  }
-
-  async function react(type: ReactionType) {
+  async function handleReact(type: ReactionType) {
+    if (!user) return toast.error('Please log in first');
     setShowReactions(false);
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+
     setLikeAnimating(true);
-    setTimeout(() => setLikeAnimating(false), 400);
+    setTimeout(() => setLikeAnimating(false), 350);
+
+    const prevPost = post;
+    const currentReaction = post.reactions?.[0]?.type;
+    const isRemoving = currentReaction === type;
+
+    // Optimistic calculation
+    const newCounts: Record<ReactionType, number> = {
+      LIKE: post.reactionCounts?.LIKE ?? 0,
+      LOVE: post.reactionCounts?.LOVE ?? 0,
+      HAHA: post.reactionCounts?.HAHA ?? 0,
+      WOW:  post.reactionCounts?.WOW ?? 0,
+      SAD:  post.reactionCounts?.SAD ?? 0,
+    };
+
+    let newTotal = post._count.reactions;
+
+    if (currentReaction) {
+      newCounts[currentReaction] = Math.max(0, (newCounts[currentReaction] || 1) - 1);
+      newTotal = Math.max(0, newTotal - 1);
+    }
+
+    if (!isRemoving) {
+      newCounts[type] = (newCounts[type] || 0) + 1;
+      newTotal += 1;
+    }
+
+    const optimisticPost: Post = {
+      ...post,
+      _count: { ...post._count, reactions: newTotal },
+      reactions: isRemoving ? [] : [{ type }],
+      reactionCounts: newCounts,
+    };
+
+    setPost(optimisticPost);
+    onUpdate?.(optimisticPost);
+
     try {
       const { data } = await api.post<Post>(`/posts/${post.id}/react`, { type });
       setPost(data);
       onUpdate?.(data);
-    } catch { toast.error('Could not react'); }
+    } catch {
+      setPost(prevPost);
+      onUpdate?.(prevPost);
+      toast.error('Could not react');
+    }
+  }
+
+  function handleLikeClick() {
+    if (!user) return toast.error('Please log in first');
+    if (myReaction) {
+      handleReact(myReaction);
+    } else {
+      handleReact('LIKE');
+    }
   }
 
   function handleLikeMouseEnter() {
-    const t = setTimeout(() => setShowReactions(true), 500);
-    setReactionHoverTimer(t);
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+    reactionTimerRef.current = setTimeout(() => setShowReactions(true), 350);
   }
 
   function handleLikeMouseLeave() {
-    if (reactionHoverTimer) clearTimeout(reactionHoverTimer);
-    setTimeout(() => setShowReactions(false), 300);
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+    reactionTimerRef.current = setTimeout(() => setShowReactions(false), 250);
+  }
+
+  function handleTouchStart() {
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+    reactionTimerRef.current = setTimeout(() => setShowReactions(true), 400);
+  }
+
+  function handleTouchEnd() {
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
   }
 
   async function loadComments() {
@@ -516,30 +563,56 @@ function containsLink(text?: string): boolean {
         </div>
       )}
 
-      {/* Reaction summary row */}
+      {/* Facebook Reaction Summary Row (Zero counts are NEVER shown) */}
       {post._count.reactions > 0 && (
-        <div style={{ padding: '6px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ display: 'flex' }}>
-              {REACTIONS.slice(0, 3).map(r => (
+        <div style={{
+          padding: '8px 18px 6px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          borderBottom: '1px solid var(--color-border)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {/* Overlapping top active reaction emoji icons */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {REACTIONS.filter(r => (post.reactionCounts?.[r.type] ?? 0) > 0).map((r, idx) => (
                 <span
                   key={r.type}
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 20, height: 20, borderRadius: '50%',
-                    background: r.color + '22', fontSize: 12,
-                    marginLeft: -3, border: '1.5px solid white',
+                    width: 22, height: 22, borderRadius: '50%',
+                    background: 'white', fontSize: 13,
+                    marginLeft: idx === 0 ? 0 : -5,
+                    border: '1.5px solid white',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                    zIndex: 10 - idx,
                   }}
-                >{r.emoji}</span>
+                  title={`${r.label}: ${post.reactionCounts?.[r.type]}`}
+                >
+                  {r.emoji}
+                </span>
               ))}
             </div>
-            <span style={{ fontSize: 13, color: 'var(--color-ink-soft)', cursor: 'default' }}>
-              {post._count.reactions} reaction{post._count.reactions !== 1 ? 's' : ''}
-            </span>
+
+            {/* Breakdown of each reacted emoji count (zero is excluded) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 2 }}>
+              {REACTIONS.filter(r => (post.reactionCounts?.[r.type] ?? 0) > 0).map(r => (
+                <span
+                  key={r.type}
+                  style={{
+                    fontSize: 12.5, fontWeight: 600,
+                    color: 'var(--color-ink-soft)',
+                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                  }}
+                >
+                  <span>{r.emoji}</span>
+                  <span>{post.reactionCounts?.[r.type]}</span>
+                </span>
+              ))}
+            </div>
           </div>
+
           {post._count.comments > 0 && (
             <span
-              style={{ fontSize: 13, color: 'var(--color-ink-soft)', cursor: 'pointer' }}
+              style={{ fontSize: 12.5, color: 'var(--color-ink-soft)', cursor: 'pointer', fontWeight: 500 }}
               onClick={() => { setShowComments(v => !v); if (!commentsLoaded) loadComments(); }}
             >
               {post._count.comments} comment{post._count.comments !== 1 ? 's' : ''}
@@ -552,15 +625,17 @@ function containsLink(text?: string): boolean {
       <div style={{
         display: 'flex',
         padding: '4px 8px 8px',
-        borderTop: '1px solid var(--color-border)',
-        marginTop: 8,
+        borderTop: post._count.reactions > 0 ? 'none' : '1px solid var(--color-border)',
+        marginTop: 4,
         gap: 0,
       }}>
-        {/* Like */}
+        {/* Like Button & Reaction Bar */}
         <div
           style={{ flex: 1, position: 'relative', display: 'flex' }}
           onMouseEnter={handleLikeMouseEnter}
           onMouseLeave={handleLikeMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <button
             className="btn-ghost"
@@ -575,7 +650,7 @@ function containsLink(text?: string): boolean {
             onClick={handleLikeClick}
           >
             <span style={{
-              fontSize: 17,
+              fontSize: 18,
               display: 'inline-block',
               transform: likeAnimating ? 'scale(1.4)' : 'scale(1)',
               transition: 'transform 0.2s cubic-bezier(.36,.07,.19,.97)',
@@ -587,14 +662,14 @@ function containsLink(text?: string): boolean {
             </span>
           </button>
 
-          {/* Hover reaction picker */}
+          {/* Hover / Long-press Reaction Picker (Facebook Style) */}
           {showReactions && (
             <div
               style={{
-                position: 'absolute', bottom: 'calc(100% + 6px)', left: 0,
+                position: 'absolute', bottom: 'calc(100% + 8px)', left: 0,
                 background: 'white', border: '1px solid var(--color-border)',
-                borderRadius: 30, padding: '8px 12px',
-                display: 'flex', gap: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', zIndex: 50,
+                borderRadius: 'var(--radius-pill)', padding: '6px 10px',
+                display: 'flex', gap: 6, boxShadow: '0 8px 28px rgba(0,0,0,0.18)', zIndex: 100,
                 animation: 'fadeInUp 0.15s ease',
               }}
               onMouseEnter={() => setShowReactions(true)}
@@ -603,19 +678,21 @@ function containsLink(text?: string): boolean {
               {REACTIONS.map(r => (
                 <button
                   key={r.type}
-                  onClick={(e) => { e.stopPropagation(); react(r.type); }}
+                  onClick={(e) => { e.stopPropagation(); handleReact(r.type); }}
                   style={{
                     fontSize: 26, border: 'none', background: 'none', cursor: 'pointer',
-                    transition: 'transform 0.1s', padding: 3, borderRadius: '50%',
+                    transition: 'transform 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    padding: 4, borderRadius: '50%',
                     display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    position: 'relative',
                   }}
                   onMouseOver={(e) => {
-                    (e.currentTarget.style.transform = 'scale(1.4) translateY(-4px)');
+                    e.currentTarget.style.transform = 'scale(1.4) translateY(-6px)';
                     const label = e.currentTarget.querySelector('.reaction-label') as HTMLElement;
                     if (label) label.style.opacity = '1';
                   }}
                   onMouseOut={(e) => {
-                    (e.currentTarget.style.transform = 'scale(1) translateY(0)');
+                    e.currentTarget.style.transform = 'scale(1) translateY(0)';
                     const label = e.currentTarget.querySelector('.reaction-label') as HTMLElement;
                     if (label) label.style.opacity = '0';
                   }}
@@ -623,9 +700,11 @@ function containsLink(text?: string): boolean {
                 >
                   {r.emoji}
                   <span className="reaction-label" style={{
-                    fontSize: 9, fontWeight: 700, color: '#333',
-                    opacity: 0, transition: 'opacity 0.1s', marginTop: 1,
+                    fontSize: 10, fontWeight: 700, color: 'white',
+                    background: 'rgba(0,0,0,0.8)', padding: '2px 6px', borderRadius: 8,
+                    opacity: 0, transition: 'opacity 0.12s',
                     pointerEvents: 'none', whiteSpace: 'nowrap',
+                    position: 'absolute', bottom: 'calc(100% + 4px)',
                   }}>{r.label}</span>
                 </button>
               ))}

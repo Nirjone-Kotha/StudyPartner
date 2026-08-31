@@ -109,14 +109,14 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { handle } });
     if (!user) throw new NotFoundException('User not found');
 
-    return this.prisma.post.findMany({
+    const rawPosts = await this.prisma.post.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
       take: 30,
       include: {
         user: { select: { id: true, name: true, handle: true, avatar: true, isAdmin: true } },
         _count: { select: { reactions: true, comments: true } },
-        reactions: userId ? { where: { userId }, select: { type: true } } : false,
+        reactions: { select: { type: true, userId: true } },
         poll: {
           include: {
             options: { orderBy: { order: 'asc' } },
@@ -124,6 +124,32 @@ export class UsersService {
           },
         },
       },
+    });
+
+    return rawPosts.map((p) => {
+      const reactionCounts: Record<string, number> = {
+        LIKE: 0,
+        LOVE: 0,
+        HAHA: 0,
+        WOW: 0,
+        SAD: 0,
+      };
+      if (Array.isArray(p.reactions)) {
+        p.reactions.forEach((r: any) => {
+          if (reactionCounts[r.type] !== undefined) {
+            reactionCounts[r.type]++;
+          }
+        });
+      }
+      const myReaction = userId && Array.isArray(p.reactions)
+        ? p.reactions.find((r: any) => r.userId === userId)
+        : null;
+
+      return {
+        ...p,
+        reactions: myReaction ? [{ type: myReaction.type }] : [],
+        reactionCounts,
+      };
     });
   }
 

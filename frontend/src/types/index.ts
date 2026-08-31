@@ -62,6 +62,7 @@ export interface Post {
   };
   _count: { reactions: number; comments: number };
   reactions?: { type: ReactionType }[];
+  reactionCounts?: Record<ReactionType, number>;
   poll?: Poll;
   savedBy?: { userId: string }[];
 }
