@@ -6,30 +6,30 @@ export class RegisterDto {
   @IsString()
   @MinLength(2)
   @MaxLength(50)
-  name: string;
+  name!: string;
 
   @ApiProperty()
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty()
   @IsString()
   @MinLength(3)
   @MaxLength(30)
-  handle: string;
+  handle!: string;
 
   @ApiProperty()
   @IsString()
   @MinLength(8)
-  password: string;
+  password!: string;
 }
 
 export class LoginDto {
   @ApiProperty({ description: 'Email address or handle' })
   @IsString()
-  email: string;
+  email!: string;
 
   @ApiProperty()
   @IsString()
-  password: string;
+  password!: string;
 }
