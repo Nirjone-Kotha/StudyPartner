@@ -6,9 +6,26 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Full CORS configuration for Vercel, mobile PWA, localhost, and cross-origin preflight requests
   app.enableCors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow any origin (including Vercel domains, localhost, mobile webviews, curl, etc.)
+      callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'Cache-Control',
+      'X-Custom-Header',
+    ],
+    exposedHeaders: ['Authorization'],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   app.useGlobalPipes(
@@ -22,7 +39,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const config = new DocumentBuilder()
-    .setTitle('FunStore API')
+    .setTitle('Study Partner API')
     .setDescription('Social platform API')
     .setVersion('1.0')
     .addBearerAuth()
@@ -32,7 +49,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
-  console.log(`🚀 FunStore API running at http://0.0.0.0:${port}/api`);
+  console.log(`🚀 Study Partner API running at http://0.0.0.0:${port}/api`);
   console.log(`📚 Swagger docs at http://localhost:${port}/api/docs`);
 }
 bootstrap();

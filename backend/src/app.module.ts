@@ -25,10 +25,37 @@ import { StoriesModule } from './stories/stories.module';
       { name: 'long', ttl: 60000, limit: 100 },
     ]),
 
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
+    BullModule.forRootAsync({
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL;
+        if (redisUrl) {
+          try {
+            const url = new URL(redisUrl);
+            return {
+              connection: {
+                host: url.hostname,
+                port: parseInt(url.port || '6379'),
+                username: url.username || undefined,
+                password: url.password || undefined,
+                tls: redisUrl.startsWith('rediss://') ? {} : undefined,
+                maxRetriesPerRequest: null,
+                enableReadyCheck: false,
+              },
+            };
+          } catch {
+            // fallback below
+          }
+        }
+        return {
+          connection: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379'),
+            password: process.env.REDIS_PASSWORD || undefined,
+            maxRetriesPerRequest: null,
+            enableReadyCheck: false,
+            retryStrategy: () => null,
+          },
+        };
       },
     }),
 
@@ -48,4 +75,3 @@ import { StoriesModule } from './stories/stories.module';
   ],
 })
 export class AppModule {}
-
