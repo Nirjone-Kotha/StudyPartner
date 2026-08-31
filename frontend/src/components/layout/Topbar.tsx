@@ -460,22 +460,23 @@ export function Topbar() {
   };
 
   const handleMarkAllNotifsRead = async () => {
+    setUnreadNotifications(0);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     try {
       await api.post('/notifications/read-all');
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      setUnreadNotifications(0);
+      toast.success('All marked as read');
     } catch { /* silent */ }
   };
 
   const handleNotificationClick = async (notif: NotificationItem) => {
+    setShowNotifications(false);
     if (!notif.read) {
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+      setUnreadNotifications(c => Math.max(0, c - 1));
       try {
         await api.post(`/notifications/${notif.id}/read`);
-        setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
-        setUnreadNotifications(c => Math.max(0, c - 1));
       } catch { /* silent */ }
     }
-    setShowNotifications(false);
     if (notif.targetUrl) {
       router.push(notif.targetUrl);
     } else if (notif.actor) {

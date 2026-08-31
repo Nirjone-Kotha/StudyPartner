@@ -14,18 +14,18 @@ interface StoryComposerProps {
 }
 
 const BG_GRADIENTS = [
-  { id: 'royal-purple', name: 'Study Partner Magic', bg: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%)', color: '#7c3aed' },
-  { id: 'sunset', name: 'Sunset Aura', bg: 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #8b5cf6 100%)', color: '#f97316' },
-  { id: 'ocean', name: 'Ocean Cyan', bg: 'linear-gradient(135deg, #0052D4 0%, #4364F7 50%, #6FB1FC 100%)', color: '#4364F7' },
-  { id: 'coral', name: 'Coral Rose', bg: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', color: '#ff416c' },
-  { id: 'midnight', name: 'Midnight Spark', bg: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)', color: '#1e1b4b' },
+  { id: 'blue', name: 'Classic Blue', bg: 'linear-gradient(135deg, #0064e0 0%, #0084ff 50%, #00c6ff 100%)', color: '#0084ff' },
+  { id: 'purple-pink', name: 'Berry', bg: 'linear-gradient(135deg, #7928ca 0%, #ff0080 100%)', color: '#ec4899' },
+  { id: 'sunset', name: 'Sunset', bg: 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #8b5cf6 100%)', color: '#f97316' },
+  { id: 'coral', name: 'Coral', bg: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', color: '#ff416c' },
+  { id: 'navy', name: 'Deep Sea', bg: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)', color: '#203a43' },
+  { id: 'dark', name: 'Midnight', bg: 'linear-gradient(135deg, #18191a 0%, #242526 100%)', color: '#18191a' },
   { id: 'aurora', name: 'Neon Aurora', bg: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#00f2fe' },
-  { id: 'emerald', name: 'Emerald Forest', bg: 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)', color: '#10b981' },
-  { id: 'sunburst', name: 'Golden Glow', bg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#f59e0b' },
-  { id: 'pastel', name: 'Pastel Dream', bg: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', color: '#a18cd1' },
-  { id: 'classic-blue', name: 'Classic Blue', bg: 'linear-gradient(135deg, #0064e0 0%, #0084ff 50%, #00c6ff 100%)', color: '#0084ff' },
-  { id: 'berry', name: 'Berry Glaze', bg: 'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)', color: '#8a2387' },
-  { id: 'dark', name: 'Midnight Dark', bg: 'linear-gradient(135deg, #18191a 0%, #242526 100%)', color: '#18191a' },
+  { id: 'emerald', name: 'Emerald', bg: 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)', color: '#0ba360' },
+  { id: 'golden', name: 'Sunburst', bg: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', color: '#f6d365' },
+  { id: 'violet', name: 'Lavender', bg: 'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)', color: '#8a2387' },
+  { id: 'cotton', name: 'Pastel Dream', bg: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', color: '#a18cd1' },
+  { id: 'forest', name: 'Forest', bg: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)', color: '#134e5e' },
 ];
 
 const FONT_STYLES: { id: FontStyle; label: string; name: string }[] = [
@@ -789,100 +789,87 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
 
           {/* ── Right Main Canvas (Facebook Dark Theater Preview) ── */}
           <div style={{
-            flex: 1, background: '#f0f2f5',
-            display: 'flex', flexDirection: 'column',
-            padding: '16px 24px 24px', minWidth: 0,
+            flex: 1, background: '#18191a',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24, position: 'relative', overflow: 'hidden',
           }}
-          className="hidden md:flex flex-1 flex-col"
+          className="hidden md:flex flex-1"
           >
-            {/* Header above canvas */}
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#65676b', marginBottom: 12 }}>
-              Preview
-            </div>
-
-            {/* Dark Theater Box */}
+            {/* 9:16 Vertical Story Card Preview */}
             <div style={{
-              flex: 1, background: '#18191a', borderRadius: 16,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 24, boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)',
-              position: 'relative',
+              width: 340, height: 600, borderRadius: 16,
+              background: bgColor, position: 'relative',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+              overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '24px 20px', transition: 'background 0.3s ease',
             }}>
-              {/* 9:16 Vertical Story Card Preview */}
+              {/* Optional Background Photo */}
+              {imageUrl && (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageUrl}
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
+                </>
+              )}
+
+              {/* Story Top Progress Bar */}
               <div style={{
-                width: 320, height: 560, borderRadius: 16,
-                background: bgColor, position: 'relative',
-                boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
-                overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: '24px 20px', transition: 'background 0.3s ease',
+                position: 'absolute', top: 14, left: 14, right: 14,
+                height: 3, background: 'rgba(255,255,255,0.35)', borderRadius: 99,
+                overflow: 'hidden', zIndex: 10,
               }}>
-                {/* Optional Background Photo */}
-                {imageUrl && (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imageUrl}
-                      alt=""
-                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
-                  </>
-                )}
-
-                {/* Story Top Progress Bar */}
-                <div style={{
-                  position: 'absolute', top: 12, left: 12, right: 12,
-                  height: 3, background: 'rgba(255,255,255,0.35)', borderRadius: 99,
-                  overflow: 'hidden', zIndex: 10,
-                }}>
-                  <div style={{ width: '40%', height: '100%', background: 'white' }} />
-                </div>
-
-                {/* Story Header Inside Card */}
-                <div style={{
-                  position: 'absolute', top: 22, left: 12, right: 12,
-                  display: 'flex', alignItems: 'center', gap: 10, zIndex: 10,
-                }}>
-                  {user?.avatar ? (
-                    <Image
-                      src={user.avatar}
-                      alt={user.name || 'User'}
-                      width={32} height={32}
-                      className="avatar" unoptimized
-                      style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid white' }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%',
-                      background: 'white', color: '#0084FF',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 700, fontSize: 13,
-                    }}>
-                      {user?.name?.[0] || 'U'}
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ color: 'white', fontSize: 13, fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                      {user?.name || 'User'}
-                    </span>
-                    <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                      Just now
-                    </span>
-                  </div>
-                </div>
-
-                {/* Dynamic Centered Text */}
-                <p
-                  className={`relative text-center leading-snug wrap-break-word z-10 ${previewFontClass[fontSize]}`}
-                  style={{
-                    color: textColor,
-                    textShadow: '0 2px 12px rgba(0,0,0,0.7)',
-                    margin: 0, maxWidth: '90%',
-                    ...previewFontStyle,
-                  }}
-                >
-                  {text || 'Start typing…'}
-                </p>
+                <div style={{ width: '40%', height: '100%', background: 'white' }} />
               </div>
+
+              {/* Story Header Inside Card */}
+              <div style={{
+                position: 'absolute', top: 26, left: 14, right: 14,
+                display: 'flex', alignItems: 'center', gap: 10, zIndex: 10,
+              }}>
+                {user?.avatar ? (
+                  <Image
+                    src={user.avatar}
+                    alt={user.name || 'User'}
+                    width={36} height={36}
+                    className="avatar" unoptimized
+                    style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid white' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '50%',
+                    background: 'white', color: '#0084FF',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 700, fontSize: 14,
+                  }}>
+                    {user?.name?.[0] || 'U'}
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ color: 'white', fontSize: 13, fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+                    {user?.name || 'User'}
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+                    Just now
+                  </span>
+                </div>
+              </div>
+
+              {/* Dynamic Centered Text */}
+              <p
+                className={`relative text-center leading-snug wrap-break-word z-10 ${previewFontClass[fontSize]}`}
+                style={{
+                  color: textColor,
+                  textShadow: '0 2px 12px rgba(0,0,0,0.7)',
+                  margin: 0, maxWidth: '90%',
+                  ...previewFontStyle,
+                }}
+              >
+                {text || 'Start typing…'}
+              </p>
             </div>
           </div>
         </div>
