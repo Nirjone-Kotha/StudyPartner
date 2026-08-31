@@ -232,9 +232,9 @@ export default function FriendsPage() {
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       <Toaster position="top-center" />
       <Topbar />
-      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'flex-start' }}>
+      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         <div className="left-sidebar"><LeftNav /></div>
-        <main style={{ flex: 1, minWidth: 0 }}>
+        <main style={{ flex: 1, minWidth: 0, width: '100%' }}>
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-ink)', marginBottom: 4 }}>Friends</h1>
             <p style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>Connect with your study partners</p>
@@ -282,16 +282,16 @@ export default function FriendsPage() {
           </div>
 
           {loading ? (
-            <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-ink-faint)', fontSize: 15 }}>
+            <div style={{ width: '100%', padding: 48, textAlign: 'center', color: 'var(--color-ink-faint)', fontSize: 15 }}>
               Loading…
             </div>
           ) : (
             <>
               {/* REQUESTS TAB */}
               {tab === 'requests' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {pending.length === 0 && sent.length === 0 && (
-                    <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+                    <div className="card" style={{ width: '100%', padding: 40, textAlign: 'center' }}>
                       <p style={{ fontSize: 32, marginBottom: 10 }}>📭</p>
                       <p style={{ color: 'var(--color-ink-soft)', fontSize: 15 }}>No pending friend requests</p>
                     </div>
@@ -351,9 +351,9 @@ export default function FriendsPage() {
 
               {/* SUGGESTIONS TAB */}
               {tab === 'suggestions' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {suggestions.length === 0 ? (
-                    <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+                    <div className="card" style={{ width: '100%', padding: 40, textAlign: 'center' }}>
                       <p style={{ fontSize: 32, marginBottom: 10 }}>🎉</p>
                       <p style={{ color: 'var(--color-ink-soft)', fontSize: 15 }}>You&apos;ve connected with everyone!</p>
                     </div>
@@ -376,9 +376,9 @@ export default function FriendsPage() {
 
               {/* FRIENDS TAB */}
               {tab === 'friends' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {friends.length === 0 ? (
-                    <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+                    <div className="card" style={{ width: '100%', padding: 40, textAlign: 'center' }}>
                       <p style={{ color: 'var(--color-ink-soft)', fontSize: 15 }}>No friends yet — send some requests!</p>
                       <button className="btn-brand" style={{ marginTop: 16, padding: '10px 24px' }} onClick={() => setTab('suggestions')}>
                         Find Friends
@@ -427,9 +427,9 @@ export default function FriendsPage() {
 
               {/* BLOCKED TAB */}
               {tab === 'blocked' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {blocked.length === 0 ? (
-                    <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+                    <div className="card" style={{ width: '100%', padding: 40, textAlign: 'center' }}>
                       <p style={{ color: 'var(--color-ink-soft)', fontSize: 15 }}>No blocked users</p>
                     </div>
                   ) : (
