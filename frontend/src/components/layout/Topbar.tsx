@@ -428,6 +428,9 @@ export function Topbar() {
     return () => clearInterval(iv);
   }, [user]);
 
+  // Track whether user manually cleared the badge (to avoid polling override)
+  const userClearedRef = useRef(false);
+
   // Notifications fetch & poll
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -438,7 +441,18 @@ export function Topbar() {
         api.get<{ count: number }>('/notifications/unread-count').catch(() => ({ data: { count: 0 } })),
       ]);
       if (notifsRes?.data) setNotifications(notifsRes.data);
-      if (countRes?.data) setUnreadNotifications(countRes.data.count || 0);
+      if (countRes?.data) {
+        const serverCount = countRes.data.count || 0;
+        if (serverCount > 0) {
+          // New notifications arrived — always show
+          userClearedRef.current = false;
+          setUnreadNotifications(serverCount);
+        } else if (!userClearedRef.current) {
+          // Server says 0 and user didn't manually clear — safe to update
+          setUnreadNotifications(0);
+        }
+        // If userClearedRef.current is true and serverCount is 0, keep showing 0 (already cleared)
+      }
     } catch { /* silent */ }
   }, [user]);
 
@@ -452,27 +466,39 @@ export function Topbar() {
     setShowNotifications(v => {
       const next = !v;
       if (next) {
+        // Only refresh the notification LIST, not the unread count
+        // (to avoid overriding optimistic badge clear on re-open)
         setNotificationsLoading(true);
-        fetchNotifications().finally(() => setNotificationsLoading(false));
+        api.get<NotificationItem[]>('/notifications')
+          .then(res => { if (res?.data) setNotifications(res.data); })
+          .catch(() => {})
+          .finally(() => setNotificationsLoading(false));
       }
       return next;
     });
   };
 
   const handleMarkAllNotifsRead = async () => {
+    // Optimistic update first — clears badge immediately
+    userClearedRef.current = true;
     setUnreadNotifications(0);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setShowNotifications(false);
     try {
       await api.post('/notifications/read-all');
-      toast.success('All marked as read');
     } catch { /* silent */ }
   };
 
   const handleNotificationClick = async (notif: NotificationItem) => {
     setShowNotifications(false);
     if (!notif.read) {
+      // Optimistic update — remove badge immediately
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
-      setUnreadNotifications(c => Math.max(0, c - 1));
+      setUnreadNotifications(c => {
+        const next = Math.max(0, c - 1);
+        if (next === 0) userClearedRef.current = true;
+        return next;
+      });
       try {
         await api.post(`/notifications/${notif.id}/read`);
       } catch { /* silent */ }

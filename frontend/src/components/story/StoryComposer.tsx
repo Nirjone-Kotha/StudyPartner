@@ -72,7 +72,7 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Track mobile vs desktop via JS (more reliable than CSS-only approach with portals)
+  // Track mobile vs desktop via JS (reliable in portals where CSS classes may be overridden)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -484,7 +484,6 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
         )}
       </div>
       )}
-
       {/* ══════════════════════════════════════════════════════════
           DESKTOP VIEW (Facebook Story Studio with Left Panel & Dark Theater)
          ══════════════════════════════════════════════════════════ */}
