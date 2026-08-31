@@ -1,65 +1,65 @@
 @import "tailwindcss";
 
 :root {
-  --color-brand: #5B4DFF;
-  --color-brand-dark: #493BDE;
-  --color-brand-tint: #EEF0FF;
-  --color-accent: #FF5E3A;
-  --color-accent-tint: #FFF1EE;
-  --color-gold: #F59E0B;
+  --color-brand: #0866FF;
+  --color-brand-dark: #0056D2;
+  --color-brand-tint: #E7F3FF;
+  --color-accent: #F3425F;
+  --color-accent-tint: #FEE2E2;
+  --color-gold: #F7B125;
   --color-gold-tint: #FEF3C7;
-  --color-ink: #111827;
-  --color-ink-soft: #4B5563;
-  --color-ink-faint: #9CA3AF;
+  --color-ink: #050505;
+  --color-ink-soft: #65676B;
+  --color-ink-faint: #8A8D91;
   --color-surface: #FFFFFF;
-  --color-surface-2: #F8F9FA;
-  --color-bg: #F6F7F9;
-  --color-border: #E5E7EB;
+  --color-surface-2: #F0F2F5;
+  --color-bg: #F0F2F5;
+  --color-border: #E4E6EB;
 
   --font-display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', monospace;
 
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.1);
-  --shadow-brand: 0 4px 14px rgba(91, 77, 255, 0.28);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.12);
+  --shadow-brand: 0 4px 14px rgba(8, 102, 255, 0.28);
 }
 
 @theme {
-  --color-brand: #5B4DFF;
-  --color-brand-dark: #493BDE;
-  --color-brand-tint: #EEF0FF;
-  --color-accent: #FF5E3A;
-  --color-accent-tint: #FFF1EE;
-  --color-gold: #F59E0B;
+  --color-brand: #0866FF;
+  --color-brand-dark: #0056D2;
+  --color-brand-tint: #E7F3FF;
+  --color-accent: #F3425F;
+  --color-accent-tint: #FEE2E2;
+  --color-gold: #F7B125;
   --color-gold-tint: #FEF3C7;
-  --color-ink: #111827;
-  --color-ink-soft: #4B5563;
-  --color-ink-faint: #9CA3AF;
+  --color-ink: #050505;
+  --color-ink-soft: #65676B;
+  --color-ink-faint: #8A8D91;
   --color-surface: #FFFFFF;
-  --color-surface-2: #F8F9FA;
-  --color-bg: #F6F7F9;
-  --color-border: #E5E7EB;
+  --color-surface-2: #F0F2F5;
+  --color-bg: #F0F2F5;
+  --color-border: #E4E6EB;
 
   --font-display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', monospace;
 
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.1);
-  --shadow-brand: 0 4px 14px rgba(91, 77, 255, 0.28);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.12);
+  --shadow-brand: 0 4px 14px rgba(8, 102, 255, 0.28);
 }
 
 * {

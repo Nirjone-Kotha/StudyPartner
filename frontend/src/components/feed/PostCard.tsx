@@ -10,11 +10,11 @@ import { PollCard } from '@/components/poll/PollCard';
 import type { Post, Comment, ReactionType } from '@/types';
 
 const REACTIONS: { type: ReactionType; emoji: string; label: string; color: string }[] = [
-  { type: 'LIKE',  emoji: '👍', label: 'Like',  color: '#5B4DFF' },
-  { type: 'LOVE',  emoji: '❤️', label: 'Love',  color: '#EF4444' },
-  { type: 'HAHA',  emoji: '😂', label: 'Haha',  color: '#F59E0B' },
-  { type: 'WOW',   emoji: '😮', label: 'Wow',   color: '#10B981' },
-  { type: 'SAD',   emoji: '😢', label: 'Sad',   color: '#6B7280' },
+  { type: 'LIKE',  emoji: '👍', label: 'Like',  color: '#0866FF' },
+  { type: 'LOVE',  emoji: '❤️', label: 'Love',  color: '#F3425F' },
+  { type: 'HAHA',  emoji: '😂', label: 'Haha',  color: '#F7B125' },
+  { type: 'WOW',   emoji: '😮', label: 'Wow',   color: '#45BD62' },
+  { type: 'SAD',   emoji: '😢', label: 'Sad',   color: '#65676B' },
 ];
 
 interface PostCardProps {
