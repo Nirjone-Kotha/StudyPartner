@@ -69,7 +69,7 @@ function Avatar({
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, hydrate } = useAuth();
+  const { user, isHydrated, hydrate } = useAuth();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [friends, setFriends] = useState<Conversation['partner'][]>([]);
@@ -100,11 +100,14 @@ function MessagesContent() {
   useEffect(() => { hydrate(); }, [hydrate]);
 
   useEffect(() => {
-    if (user === null) router.replace('/');
-  }, [user, router]);
+    if (isHydrated && !user) {
+      router.replace('/');
+    }
+  }, [isHydrated, user, router]);
 
   // Load conversations and friends list
   const loadConversations = useCallback(async () => {
+    if (!user) return;
     try {
       const [convRes, friendRes] = await Promise.all([
         api.get<Conversation[]>('/messages/conversations'),
@@ -117,11 +120,13 @@ function MessagesContent() {
     } finally {
       setLoadingConvos(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    if (user) {
+      loadConversations();
+    }
+  }, [user, loadConversations]);
 
   const loadPartnerStatus = useCallback(async (pid: string) => {
     try {
@@ -254,6 +259,17 @@ function MessagesContent() {
     } finally {
       setActionLoading(false);
     }
+  }
+
+  if (!isHydrated) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+        <Topbar />
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--color-ink-faint)', fontSize: 14 }}>
+          Loading messages…
+        </div>
+      </div>
+    );
   }
 
   if (!user) return null;
