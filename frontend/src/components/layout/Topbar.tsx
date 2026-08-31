@@ -113,9 +113,10 @@ export function Topbar() {
   const [showInstallMenu, setShowInstallMenu] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isPWAInstalled, setIsPWAInstalled] = useState(false);
+  const [isPWAStandalone, setIsPWAStandalone] = useState(false);
   const installMenuRef = useRef<HTMLDivElement>(null);
 
-  // Detect PWA install prompt
+  // Detect PWA install prompt and standalone mode
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
@@ -123,8 +124,11 @@ export function Topbar() {
     };
     window.addEventListener('beforeinstallprompt', handler);
 
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+      || (window.navigator as any).standalone === true;
+    if (standalone) {
       setIsPWAInstalled(true);
+      setIsPWAStandalone(true);
     }
     window.addEventListener('appinstalled', () => setIsPWAInstalled(true));
 
@@ -380,8 +384,8 @@ export function Topbar() {
 
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          {/* Install App Direct One-Click Action */}
-          {!isPWAInstalled && (
+          {/* Install App Direct One-Click Action — hidden in PWA standalone mode */}
+          {!isPWAStandalone && !isPWAInstalled && (
             <button
               onClick={handleInstallApp}
               style={{
@@ -401,7 +405,7 @@ export function Topbar() {
             </button>
           )}
 
-          {isPWAInstalled && (
+          {!isPWAStandalone && isPWAInstalled && (
             <span style={{
               padding: '5px 10px', background: 'var(--color-brand-tint)', color: 'var(--color-brand)',
               borderRadius: 'var(--radius-pill)', fontSize: 11, fontWeight: 700,
