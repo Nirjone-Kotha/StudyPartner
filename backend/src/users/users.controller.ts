@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
@@ -15,6 +15,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user profile' })
   getMe(@Request() req) {
     return this.usersService.getMe(req.user.id);
+  }
+
+  @Post(':id/follow')
+  @ApiOperation({ summary: 'Toggle follow user' })
+  toggleFollow(@Param('id') id: string, @Request() req) {
+    return this.usersService.toggleFollow(req.user.id, id);
   }
 
   @Patch('me')

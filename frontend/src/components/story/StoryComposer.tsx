@@ -14,18 +14,18 @@ interface StoryComposerProps {
 }
 
 const BG_GRADIENTS = [
-  { id: 'blue', name: 'Classic Blue', bg: 'linear-gradient(135deg, #0064e0 0%, #0084ff 50%, #00c6ff 100%)', color: '#0084ff' },
-  { id: 'purple-pink', name: 'Berry', bg: 'linear-gradient(135deg, #7928ca 0%, #ff0080 100%)', color: '#ec4899' },
-  { id: 'sunset', name: 'Sunset', bg: 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #8b5cf6 100%)', color: '#f97316' },
-  { id: 'coral', name: 'Coral', bg: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', color: '#ff416c' },
-  { id: 'navy', name: 'Deep Sea', bg: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)', color: '#203a43' },
-  { id: 'dark', name: 'Midnight', bg: 'linear-gradient(135deg, #18191a 0%, #242526 100%)', color: '#18191a' },
+  { id: 'royal-purple', name: 'Study Partner Magic', bg: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%)', color: '#7c3aed' },
+  { id: 'sunset', name: 'Sunset Aura', bg: 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #8b5cf6 100%)', color: '#f97316' },
+  { id: 'ocean', name: 'Ocean Cyan', bg: 'linear-gradient(135deg, #0052D4 0%, #4364F7 50%, #6FB1FC 100%)', color: '#4364F7' },
+  { id: 'coral', name: 'Coral Rose', bg: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', color: '#ff416c' },
+  { id: 'midnight', name: 'Midnight Spark', bg: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)', color: '#1e1b4b' },
   { id: 'aurora', name: 'Neon Aurora', bg: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)', color: '#00f2fe' },
-  { id: 'emerald', name: 'Emerald', bg: 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)', color: '#0ba360' },
-  { id: 'golden', name: 'Sunburst', bg: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', color: '#f6d365' },
-  { id: 'violet', name: 'Lavender', bg: 'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)', color: '#8a2387' },
-  { id: 'cotton', name: 'Pastel Dream', bg: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', color: '#a18cd1' },
-  { id: 'forest', name: 'Forest', bg: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)', color: '#134e5e' },
+  { id: 'emerald', name: 'Emerald Forest', bg: 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)', color: '#10b981' },
+  { id: 'sunburst', name: 'Golden Glow', bg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#f59e0b' },
+  { id: 'pastel', name: 'Pastel Dream', bg: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', color: '#a18cd1' },
+  { id: 'classic-blue', name: 'Classic Blue', bg: 'linear-gradient(135deg, #0064e0 0%, #0084ff 50%, #00c6ff 100%)', color: '#0084ff' },
+  { id: 'berry', name: 'Berry Glaze', bg: 'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)', color: '#8a2387' },
+  { id: 'dark', name: 'Midnight Dark', bg: 'linear-gradient(135deg, #18191a 0%, #242526 100%)', color: '#18191a' },
 ];
 
 const FONT_STYLES: { id: FontStyle; label: string; name: string }[] = [
@@ -738,57 +738,7 @@ export default function StoryComposer({ isAdmin, onClose, onCreated }: StoryComp
                 </div>
               </div>
 
-              {/* Image / Photo Upload (Admin Only) */}
-              {isAdmin && (
-                <div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageFile}
-                    style={{ display: 'none' }}
-                  />
-                  {imageUrl ? (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '8px 12px', borderRadius: 10, background: '#f0f2f5',
-                      border: '1px solid #e4e6eb',
-                    }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={imageUrl} alt="Background" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover' }} />
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#050505', flex: 1 }}>Photo Attached</span>
-                      <button
-                        type="button"
-                        onClick={() => setImageUrl('')}
-                        style={{
-                          background: 'none', border: 'none', color: '#ef4444',
-                          cursor: 'pointer', padding: 6,
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      style={{
-                        width: '100%', padding: '10px 14px',
-                        borderRadius: 10, border: '1.5px dashed #ced0d4',
-                        background: '#fafafa', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        fontSize: 13, fontWeight: 600, color: '#050505',
-                        transition: 'border-color 0.15s',
-                      }}
-                      onMouseOver={(e) => (e.currentTarget.style.borderColor = '#0084FF')}
-                      onMouseOut={(e) => (e.currentTarget.style.borderColor = '#ced0d4')}
-                    >
-                      <Upload size={16} color="#0084FF" />
-                      Add Photo from Device (Admin)
-                    </button>
-                  )}
-                </div>
-              )}
+              {/* Error Banner if any */}
 
               {error && (
                 <div style={{ padding: '8px 12px', background: '#fee2e2', borderRadius: 8, color: '#dc2626', fontSize: 13, fontWeight: 600 }}>

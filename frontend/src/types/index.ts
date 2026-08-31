@@ -16,9 +16,12 @@ export interface User {
   institution?: string;
   isPublic?: boolean;
   friends: number;
+  followersCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
   isAdmin: boolean;
   createdAt: string;
-  _count?: { posts: number };
+  _count?: { posts?: number; followers?: number; following?: number };
 }
 
 export interface PollOption {
@@ -53,7 +56,10 @@ export interface Post {
   pinned: boolean;
   type: PostType;
   createdAt: string;
-  user: Pick<User, 'id' | 'name' | 'handle' | 'avatar' | 'isAdmin'>;
+  user: Pick<User, 'id' | 'name' | 'handle' | 'avatar' | 'isAdmin'> & {
+    followersCount?: number;
+    isFollowing?: boolean;
+  };
   _count: { reactions: number; comments: number };
   reactions?: { type: ReactionType }[];
   poll?: Poll;

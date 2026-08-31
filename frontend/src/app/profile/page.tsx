@@ -436,6 +436,8 @@ function ProfileContent() {
   const [showFriendsModal, setShowFriendsModal] = useState(false);
   const [friendStatus, setFriendStatus] = useState<{ status: 'NONE' | 'REQUEST_SENT' | 'REQUEST_RECEIVED' | 'FRIENDS'; requestId: string | null }>({ status: 'NONE', requestId: null });
   const [friendActionLoading, setFriendActionLoading] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => { hydrate(); }, [hydrate]);
 
@@ -454,12 +456,32 @@ function ProfileContent() {
       api.get<Post[]>(`/users/${handle}/posts`),
     ]).then(([u, p]) => {
       setProfile(u.data);
+      setIsFollowing(!!u.data.isFollowing);
       setPosts(p.data);
     }).catch(() => router.replace('/feed'))
       .finally(() => setLoading(false));
   }, [handle, router]);
 
   const isMe = me?.handle === handle;
+
+  const handleToggleFollow = async () => {
+    if (!profile) return;
+    if (followLoading) return;
+    setFollowLoading(true);
+    const nextState = !isFollowing;
+    setIsFollowing(nextState);
+    try {
+      const { data } = await api.post<{ following: boolean; followersCount: number }>(`/users/${profile.id}/follow`);
+      setIsFollowing(data.following);
+      setProfile(p => p ? { ...p, followersCount: data.followersCount } : p);
+      toast.success(data.following ? `Following @${profile.handle}` : `Unfollowed @${profile.handle}`);
+    } catch {
+      setIsFollowing(!nextState);
+      toast.error('Could not update follow');
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (profile && !isMe) {
@@ -537,7 +559,7 @@ function ProfileContent() {
 
   return (
     <>
-      <main style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ width: '100%' }}>
         {/* Cover & profile card */}
         <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>
           {/* Cover — clickable for own profile */}
@@ -613,12 +635,22 @@ function ProfileContent() {
                   </button>
                 ) : (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {/* Follow / Unfollow Button */}
+                    <button
+                      className={isFollowing ? 'btn-ghost' : 'btn-brand'}
+                      disabled={followLoading}
+                      onClick={handleToggleFollow}
+                      style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      {isFollowing ? '✓ Following' : '+ Follow'}
+                    </button>
+
                     {friendStatus.status === 'NONE' && (
                       <button
                         className="btn-brand"
                         disabled={friendActionLoading}
                         onClick={handleSendRequest}
-                        style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
+                        style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-bg)', color: 'var(--color-ink)', border: '1px solid var(--color-border)' }}
                       >
                         Add Friend
                       </button>
@@ -698,6 +730,11 @@ function ProfileContent() {
 
             {/* Stats */}
             <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+              <div>
+                <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-brand)' }}>{profile.followersCount ?? 0}</span>
+                <span style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginLeft: 4 }}>Followers</span>
+              </div>
+
               <div
                 onClick={() => setShowFriendsModal(true)}
                 style={{
@@ -708,7 +745,7 @@ function ProfileContent() {
                 onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
                 title="Click to view all friends"
               >
-                <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-brand)' }}>{profile.friends}</span>
+                <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--color-ink)' }}>{profile.friends}</span>
                 <span style={{ fontSize: 13, color: 'var(--color-ink-soft)', marginLeft: 4, textDecoration: 'underline', textUnderlineOffset: 3 }}>Friends</span>
               </div>
 
@@ -797,7 +834,7 @@ function ProfileContent() {
             ))}
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Edit Profile Modal */}
       {showEditModal && (
@@ -825,18 +862,22 @@ export default function ProfilePage() {
   useEffect(() => { hydrate(); }, [hydrate]);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+    <div className="feed-page-wrapper">
       <Toaster position="top-center" />
       <Topbar />
-      <div className="feed-layout" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-        <div className="left-sidebar"><LeftNav /></div>
-        <Suspense fallback={
-          <div style={{ flex: 1, padding: 40, textAlign: 'center', color: 'var(--color-ink-faint)' }}>
-            Loading…
-          </div>
-        }>
-          <ProfileContent />
-        </Suspense>
+      <div className="feed-layout">
+        <div className="left-sidebar sidebar-scroll">
+          <LeftNav />
+        </div>
+        <main className="feed-main feed-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Suspense fallback={
+            <div style={{ flex: 1, padding: 40, textAlign: 'center', color: 'var(--color-ink-faint)' }}>
+              Loading…
+            </div>
+          }>
+            <ProfileContent />
+          </Suspense>
+        </main>
       </div>
       <MobileBottomNav />
     </div>

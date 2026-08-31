@@ -28,11 +28,7 @@ export function LeftNav() {
   }
 
   return (
-    <aside style={{
-      width: 240, flexShrink: 0,
-      position: 'sticky', top: 76,
-      height: 'calc(100vh - 76px)', overflowY: 'auto', paddingTop: 8,
-    }}>
+    <aside style={{ width: '100%' }}>
       {/* User card */}
       {user && (
         <div
@@ -56,14 +52,9 @@ export function LeftNav() {
               )}
             </div>
           </div>
-          {user.bio && (
-            <p style={{ fontSize: 12, color: 'var(--color-ink-soft)', marginTop: 10, lineHeight: 1.5 }}>{user.bio}</p>
-          )}
-          <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-ink)' }}>{user.friends}</div>
-              <div style={{ fontSize: 11, color: 'var(--color-ink-faint)' }}>Friends</div>
-            </div>
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-ink-soft)', fontSize: 13, fontWeight: 600 }}>
+            <span style={{ fontSize: 14 }}>👥</span>
+            <span>{user.followersCount ?? 0} Followers</span>
           </div>
         </div>
       )}

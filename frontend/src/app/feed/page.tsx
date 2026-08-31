@@ -83,23 +83,16 @@ export default function FeedPage() {
   function loadMore() { if (!loading && hasMore) loadFeed(page + 1); }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+    <div className="feed-page-wrapper">
       <Toaster position="top-center" />
       <Topbar />
-      <div
-        className="feed-layout"
-        style={{
-          maxWidth: 1200, margin: '0 auto',
-          padding: '24px',
-          display: 'flex', gap: 24, alignItems: 'flex-start',
-        }}
-      >
-        <div className="left-sidebar">
+      <div className="feed-layout">
+        <div className="left-sidebar sidebar-scroll">
           <LeftNav />
         </div>
 
         {/* Main feed */}
-        <main className="feed-main" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <main className="feed-main feed-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* 1. Composer on top (Facebook style) */}
           <Composer onPost={handleNewPost} />
 
@@ -150,7 +143,7 @@ export default function FeedPage() {
           <div className="show-on-mobile" style={{ height: 20 }} />
         </main>
 
-        <div className="right-sidebar">
+        <div className="right-sidebar sidebar-scroll">
           <RightColumn />
         </div>
       </div>

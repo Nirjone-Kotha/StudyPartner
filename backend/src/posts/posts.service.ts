@@ -27,7 +27,13 @@ export class PostsService {
     return {
       id: true, text: true, mediaUrl: true, mediaType: true,
       explanation: true, featured: true, pinned: true, type: true, createdAt: true,
-      user: { select: { id: true, name: true, handle: true, avatar: true, isAdmin: true } },
+      user: {
+        select: {
+          id: true, name: true, handle: true, avatar: true, isAdmin: true,
+          _count: { select: { followers: true } },
+          followers: userId ? { where: { followerId: userId }, select: { id: true } } : false,
+        },
+      },
       _count: { select: { reactions: true, comments: true } },
       reactions: userId ? { where: { userId }, select: { type: true } } : false,
       poll: {
@@ -38,6 +44,18 @@ export class PostsService {
         },
       },
     } as any;
+  }
+
+  private formatPostUser(p: any) {
+    if (!p || !p.user) return p;
+    return {
+      ...p,
+      user: {
+        ...p.user,
+        followersCount: p.user._count?.followers ?? 0,
+        isFollowing: Array.isArray(p.user.followers) && p.user.followers.length > 0,
+      },
+    };
   }
 
   async getFeed(userId: string, page = 1, limit = 20) {
@@ -58,16 +76,16 @@ export class PostsService {
       }
     }
 
-    let posts = await this.prisma.post.findMany({
+    let rawPosts = await this.prisma.post.findMany({
       skip,
       take: limit,
       orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
       select: this.postSelect(userId),
     });
 
-    if (posts.length === 0 && page === 1) {
+    if (rawPosts.length === 0 && page === 1) {
       await this.prisma.ensureSeedData().catch(() => {});
-      posts = await this.prisma.post.findMany({
+      rawPosts = await this.prisma.post.findMany({
         skip,
         take: limit,
         orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
@@ -75,6 +93,7 @@ export class PostsService {
       });
     }
 
+    const posts = rawPosts.map(p => this.formatPostUser(p));
     const result = { posts, page, limit };
     if (page === 1 && posts.length > 0) {
       await this.redis.set(cacheKey, JSON.stringify(result), FEED_CACHE_TTL);

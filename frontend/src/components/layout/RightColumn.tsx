@@ -26,12 +26,7 @@ export function RightColumn() {
   }, []);
 
   return (
-    <aside style={{
-      width: 280, flexShrink: 0,
-      position: 'sticky', top: 76,
-      height: 'calc(100vh - 76px)',
-      overflowY: 'auto', paddingTop: 8,
-    }}>
+    <aside style={{ width: '100%' }}>
       {/* Sponsored card — like Update 3 */}
       <div className="card" style={{ padding: '16px', marginBottom: 12 }}>
         <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink-soft)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>

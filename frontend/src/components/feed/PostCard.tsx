@@ -239,6 +239,31 @@ export function PostCard({ post: initialPost, onDelete, onUpdate }: PostCardProp
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [likeAnimating, setLikeAnimating] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(!!post.user.isFollowing);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  useEffect(() => {
+    setIsFollowing(!!post.user.isFollowing);
+  }, [post.user.isFollowing]);
+
+  async function handleToggleFollow(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!user) return toast.error('Please log in first');
+    if (followLoading) return;
+    setFollowLoading(true);
+    const nextState = !isFollowing;
+    setIsFollowing(nextState);
+    try {
+      const { data } = await api.post<{ following: boolean; followersCount: number }>(`/users/${post.user.id}/follow`);
+      setIsFollowing(data.following);
+      toast.success(data.following ? `Following @${post.user.handle}` : `Unfollowed @${post.user.handle}`);
+    } catch {
+      setIsFollowing(!nextState);
+      toast.error('Could not update follow');
+    } finally {
+      setFollowLoading(false);
+    }
+  }
 
   const myReaction = post.reactions?.[0]?.type;
   const isOwner = user?.id === post.user.id;
@@ -360,6 +385,24 @@ function containsLink(text?: string): boolean {
                 {post.user.isAdmin && <span className="badge badge-brand" style={{ fontSize: 10 }}>⚡ Admin</span>}
                 {post.featured && <span className="badge badge-gold" style={{ fontSize: 10 }}>Featured</span>}
                 {post.type === 'POLL' && <span className="badge badge-accent" style={{ fontSize: 10 }}>📊 Poll</span>}
+                {!isOwner && (
+                  <button
+                    onClick={handleToggleFollow}
+                    disabled={followLoading}
+                    style={{
+                      border: 'none',
+                      background: isFollowing ? 'var(--color-bg)' : 'var(--color-brand-tint)',
+                      color: isFollowing ? 'var(--color-ink-soft)' : 'var(--color-brand)',
+                      fontSize: 11, fontWeight: 700,
+                      padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
+                      transition: 'all 0.15s',
+                    }}
+                    title={isFollowing ? 'Click to unfollow' : 'Follow this user'}
+                  >
+                    {isFollowing ? '✓ Following' : '+ Follow'}
+                  </button>
+                )}
               </div>
               <div style={{ fontSize: 12, color: 'var(--color-ink-soft)' }}>
                 @{post.user.handle} · {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
