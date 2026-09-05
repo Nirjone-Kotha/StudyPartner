@@ -26,7 +26,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#0866FF',
+  themeColor: '#FFFFFF',
   viewportFit: 'cover',
 };
 
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   other: {
     'mobile-web-app-capable': 'yes',
     'application-name': 'Study Partner',
-    'msapplication-TileColor': '#0866FF',
+    'msapplication-TileColor': '#FFFFFF',
     'msapplication-TileImage': '/icons/icon-144x144.png',
     'msapplication-tap-highlight': 'no',
   },
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="bn" className={`${fredoka.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0866FF" />
+        <meta name="theme-color" content="#FFFFFF" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Study Partner" />
@@ -70,7 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
-        <meta name="msapplication-TileColor" content="#0866FF" />
+        <meta name="msapplication-TileColor" content="#FFFFFF" />
       </head>
       <body>
         {children}

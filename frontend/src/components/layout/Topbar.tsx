@@ -649,6 +649,7 @@ export function Topbar() {
       backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--color-border)',
       boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+      paddingTop: 'env(safe-area-inset-top, 0px)',
     }}>
       {/* ─── Top Row: Logo, Search, Desktop/Mobile Actions ─── */}
       <div style={{
