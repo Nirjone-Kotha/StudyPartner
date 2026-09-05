@@ -26,7 +26,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#FFFFFF',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#FFFFFF' },
+  ],
   viewportFit: 'cover',
 };
 
@@ -63,6 +66,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FFFFFF" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#FFFFFF" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Study Partner" />
@@ -71,6 +76,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         <meta name="msapplication-TileColor" content="#FFFFFF" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var enforceWhite = function() {
+                var metas = document.querySelectorAll('meta[name="theme-color"]');
+                metas.forEach(function(m) { m.setAttribute('content', '#FFFFFF'); });
+              };
+              enforceWhite();
+              window.addEventListener('DOMContentLoaded', enforceWhite);
+            } catch(e) {}
+          })();
+        `}} />
       </head>
       <body>
         {children}
@@ -79,7 +96,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             window.addEventListener('load', function() {
               navigator.serviceWorker.register('/sw.js')
                 .then(function(registration) {
-                  console.log('SW registered:', registration.scope);
+                  registration.update();
+                  console.log('SW registered & updated:', registration.scope);
                 })
                 .catch(function(err) {
                   console.log('SW registration failed:', err);

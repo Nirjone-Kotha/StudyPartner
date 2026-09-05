@@ -1,11 +1,10 @@
 // Study Partner Service Worker - PWA Support
-const CACHE_NAME = 'studypartner-v1';
-const STATIC_CACHE = 'studypartner-static-v1';
+const CACHE_NAME = 'studypartner-v3';
+const STATIC_CACHE = 'studypartner-static-v3';
 
 const STATIC_ASSETS = [
   '/',
   '/feed',
-  '/manifest.json',
 ];
 
 // Install event
@@ -39,6 +38,14 @@ self.addEventListener('fetch', (event) => {
 
   // Skip non-GET requests
   if (request.method !== 'GET') return;
+
+  // Always fetch manifest fresh so WebAPK and Chrome status bar update immediately
+  if (url.pathname === '/manifest.json') {
+    event.respondWith(
+      fetch(request).catch(() => caches.match(request))
+    );
+    return;
+  }
 
   // Skip API requests (always network)
   if (url.pathname.startsWith('/api/')) return;
